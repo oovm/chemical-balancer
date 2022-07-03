@@ -1,6 +1,5 @@
 use std::collections::BTreeSet;
-
-
+use crate::{ChemicalBalancer, Compound};
 
 
 impl ChemicalBalancer {
@@ -8,8 +7,6 @@ impl ChemicalBalancer {
         compound.count_elements(&self.elements)
     }
 }
-
-
 
 
 // co2
@@ -39,5 +36,6 @@ impl Compound {
             }
         }
     }
+}
 
 
