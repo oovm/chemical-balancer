@@ -12,13 +12,22 @@ pub struct ChemicalBalancer {
     rhs: Vec<Compound>,
 }
 
+#[derive(Debug)]
 pub enum Compound {
     Atom {
         atom: String,
         count: f64,
     },
     Compound {
+        group: CompoundGroup,
         compound: Vec<Compound>,
         count: f64,
     },
+}
+
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CompoundGroup {
+    #[default]
+    None,
+    Parentheses,
 }
