@@ -12,7 +12,6 @@ pub struct ChemicalBalancer {
     rhs: Vec<Compound>,
 }
 
-#[derive(Debug)]
 pub enum Compound {
     Atom {
         atom: String,

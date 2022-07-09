@@ -1,5 +1,7 @@
+use std::cmp::Ordering;
 use std::collections::BTreeSet;
-use crate::{ChemicalBalancer, Compound};
+use std::fmt::{Debug, Formatter};
+use crate::{ChemicalBalancer, Compound, CompoundGroup};
 
 
 impl ChemicalBalancer {
@@ -11,8 +13,44 @@ impl ChemicalBalancer {
 
 // co2
 
+impl Debug for Compound {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Compound::Atom { atom, count } => {
+                match count.partial_cmp(&1.0) {
+                    Some(Ordering::Equal) =>
+                        write!(f, "{}", atom)
+
+                    ,
+                    _ =>
+                        write!(f, "{}{}", atom, count)
+                }
+            }
+            Compound::Compound { compound, count, .. } => {
+                let mut v = &mut f.debug_tuple("Compound");
+                for item in compound {
+                    v = v.field(item);
+                }
+                v = v.field(count);
+                v.finish()
+            }
+        }
+    }
+}
 
 impl Compound {
+    pub fn record_elements(&self, all: &mut BTreeSet<String>) {
+        match self {
+            Compound::Atom { atom, .. } => {
+                all.insert(atom.clone());
+            }
+            Compound::Compound { compound, .. } => {
+                for c in compound {
+                    c.record_elements(all);
+                }
+            }
+        }
+    }
     pub fn count_elements(&self, all: &BTreeSet<String>) -> Vec<f64> {
         match self {
             Compound::Atom { atom, count } => {
@@ -38,14 +76,13 @@ impl Compound {
     }
 }
 
-impl Compound  {
-    pub fn parse(state: ParseState) -> ParseResult<Self> {
+impl Compound {
+    pub fn parentheses(compound: Vec<Compound>, count: f64) -> Self {
         Compound::Compound {
-            group: Default::default(),
-            compound: vec![],
-            count: 0.0,
+            group: CompoundGroup::Parentheses,
+            compound,
+            count,
         }
     }
-
 }
 
