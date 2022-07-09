@@ -16,11 +16,13 @@ pub enum Compound {
     Atom {
         atom: String,
         count: f64,
+        electronic: f64,
     },
     Compound {
         group: CompoundGroup,
         compound: Vec<Compound>,
         count: f64,
+        electronic: f64,
     },
 }
 
