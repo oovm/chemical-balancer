@@ -1,13 +1,13 @@
 use std::str::FromStr;
 use pex::{ParseResult, ParseState, StopBecause};
-use crate::Compound;
+use crate::{ChemicalBalancer, Compound};
 
-impl FromStr for Compound {
+impl FromStr for ChemicalBalancer {
     type Err = StopBecause;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let state = ParseState::new(s.trim_end()).skip(parse_whitespace);
-        match Compound::parse(state) {
+        match Self::parse(state) {
             ParseResult::Pending(state, compound) if state.is_empty() => {
                 Ok(compound)
             }
@@ -18,6 +18,42 @@ impl FromStr for Compound {
                 Err(e)
             }
         }
+    }
+}
+
+impl FromStr for Compound {
+    type Err = StopBecause;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let state = ParseState::new(s.trim_end()).skip(parse_whitespace);
+        match Self::parse(state) {
+            ParseResult::Pending(state, compound) if state.is_empty() => {
+                Ok(compound)
+            }
+            ParseResult::Pending(state, ..) => {
+                Err(StopBecause::ExpectEof { position: state.start_offset })
+            }
+            ParseResult::Stop(e) => {
+                Err(e)
+            }
+        }
+    }
+}
+
+impl ChemicalBalancer {
+    pub fn parse(state: ParseState) -> ParseResult<Self> {
+        let (state, lhs) = state.match_repeat_m_n(1, 255, Compound::parse)?;
+        let (state, _) = state.skip(parse_whitespace).match_char('=')?;
+        let (state, rhs) = state.skip(parse_whitespace).match_repeat_m_n(1, 255, Compound::parse)?;
+
+        let mut out = ChemicalBalancer {
+            elements: Default::default(),
+            lhs,
+            rhs,
+        };
+        out.record_elements();
+
+        state.finish(out)
     }
 }
 
@@ -135,7 +171,6 @@ fn parse_integer(state: ParseState) -> ParseResult<usize> {
 
 #[test]
 fn test() {
-    let co2 = ParseState::new("S2(CO3)");
-    let co2 = Compound::parse(co2);
+    let co2 = ChemicalBalancer::from_str("S2(CO3) = CO2");
     println!("{:#?}", co2)
 }
