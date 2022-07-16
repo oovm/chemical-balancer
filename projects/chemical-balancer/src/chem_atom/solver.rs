@@ -1,7 +1,7 @@
 use super::*;
 
 impl ChemicalBalancer {
-    pub fn solve(&self) -> Option<Vec<f64>> {
+    pub fn solve(&self) -> Vec<Vec<f64>> {
         let mut matrix = Vec::new();
         for i in &self.lhs {
             matrix.push(i.count_elements(&self.elements));
@@ -9,13 +9,49 @@ impl ChemicalBalancer {
         for i in &self.rhs {
             matrix.push(i.count_elements(&self.elements));
         }
-        let null_space = null_space(matrix);
-        let mut out = Vec::new();
-        for i in null_space[0].iter() {
-            out.push(i.round());
-        }
-        Some(out)
+        // transpose matrix
+        null_space(transpose(matrix))
     }
+    pub fn matrix(&self) -> Vec<Vec<f64>> {
+        let mut matrix = Vec::new();
+        for i in &self.lhs {
+            matrix.push(i.count_elements(&self.elements));
+        }
+        for i in &self.rhs {
+            matrix.push(i.count_elements(&self.elements));
+        }
+        matrix
+    }
+
+    pub fn solve_integers(&self) -> Vec<Vec<isize>> {
+        let a = arr2(&[[1., 2., 3.], [4., 5., 6.]]);
+        let (_, _, v_t) = a.svd(true, true).unwrap();
+        let null_space = v_t.rows(2..).into_owned();
+        println!("{:?}", null_space);
+    }
+}
+
+fn transpose(matrix: Vec<Vec<f64>>) -> Vec<Vec<f64>> {
+    let mut result = vec![vec![0.0; matrix.len()]; matrix[0].len()];
+    for i in 0..matrix.len() {
+        for j in 0..matrix[0].len() {
+            result[j][i] = matrix[i][j];
+        }
+    }
+    result
+}
+
+// Find the least common multiple that can be reduced to an integer
+// eg. [1.0, 1.5, 1.0] => [2,3,2]
+fn lcm_ints(input: &[f64], scale: f64) -> Vec<isize> {
+    let denominators = input.iter().map(|&x| (x * scale) as isize).collect::<Vec<_>>();
+    let lcm = lcm(&denominators);
+    denominators.iter().map(|&x| lcm / x).collect()
+}
+
+fn lcm(input: &[isize]) -> isize {
+    use num::integer::lcm;
+    input.iter().fold(input[0], |a, &b| lcm(a, b))
 }
 
 fn null_space(mut matrix: Vec<Vec<f64>>) -> Vec<Vec<f64>> {
@@ -77,13 +113,11 @@ fn keep_first_positive(matrix: &mut Vec<Vec<f64>>) {
 
 #[test]
 fn test() {
-    let out = null_space(vec![
-        vec![1.0, 0.0, 0.0, -1.0],
-        vec![0.0, 2.0, -1.0, 0.0],
-        vec![-2.0, 0.0, 1.0, 0.0],
-    ]);
+    let out = null_space(vec![vec![1.0, 0.0, 0.0, -1.0], vec![0.0, 2.0, -1.0, 0.0], vec![-2.0, 0.0, 1.0, 0.0]]);
     // to wolfram
     // NullSpace[{{1, 0, 0, -1}, {0, 2, -1, 0}, {-2, 0, 1, 0}}]
+
+    // [1.0, 1.5, 1.0]
 
     println!("{:#?}", out);
     assert_eq!(out, vec![vec![1.0, 1.0, 2.0, 1.0]])

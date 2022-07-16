@@ -1,6 +1,6 @@
-use std::str::FromStr;
-use pex::{ParseResult, ParseState, StopBecause};
 use crate::{ChemicalBalancer, Compound};
+use pex::{ParseResult, ParseState, StopBecause};
+use std::str::FromStr;
 
 impl FromStr for ChemicalBalancer {
     type Err = StopBecause;
@@ -8,15 +8,9 @@ impl FromStr for ChemicalBalancer {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let state = ParseState::new(s.trim_end()).skip(parse_whitespace);
         match Self::parse(state) {
-            ParseResult::Pending(state, compound) if state.is_empty() => {
-                Ok(compound)
-            }
-            ParseResult::Pending(state, ..) => {
-                Err(StopBecause::ExpectEof { position: state.start_offset })
-            }
-            ParseResult::Stop(e) => {
-                Err(e)
-            }
+            ParseResult::Pending(state, compound) if state.is_empty() => Ok(compound),
+            ParseResult::Pending(state, ..) => Err(StopBecause::ExpectEof { position: state.start_offset }),
+            ParseResult::Stop(e) => Err(e),
         }
     }
 }
@@ -27,15 +21,9 @@ impl FromStr for Compound {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let state = ParseState::new(s.trim_end()).skip(parse_whitespace);
         match Self::parse(state) {
-            ParseResult::Pending(state, compound) if state.is_empty() => {
-                Ok(compound)
-            }
-            ParseResult::Pending(state, ..) => {
-                Err(StopBecause::ExpectEof { position: state.start_offset })
-            }
-            ParseResult::Stop(e) => {
-                Err(e)
-            }
+            ParseResult::Pending(state, compound) if state.is_empty() => Ok(compound),
+            ParseResult::Pending(state, ..) => Err(StopBecause::ExpectEof { position: state.start_offset }),
+            ParseResult::Stop(e) => Err(e),
         }
     }
 }
@@ -46,11 +34,7 @@ impl ChemicalBalancer {
         let (state, _) = state.skip(parse_whitespace).match_char('=')?;
         let (state, rhs) = ChemicalBalancer::parse_add(state.skip(parse_whitespace))?;
 
-        let mut out = ChemicalBalancer {
-            elements: Default::default(),
-            lhs,
-            rhs,
-        };
+        let mut out = ChemicalBalancer { elements: Default::default(), lhs, rhs };
         out.record_elements();
 
         state.finish(out)
@@ -69,18 +53,16 @@ impl ChemicalBalancer {
 
 impl Compound {
     pub fn parse(state: ParseState) -> ParseResult<Self> {
-        let (state, compound) = state.match_repeat_m_n(1, 255, |s|
-            {
-                s.skip(parse_whitespace).begin_choice()
-                    .maybe(Self::parse_atom_count)
-                    .maybe(Self::parse_parentheses_count)
-                    .end_choice()
-            },
-        )?;
+        let (state, compound) = state.match_repeat_m_n(1, 255, |s| {
+            s.skip(parse_whitespace)
+                .begin_choice()
+                .maybe(Self::parse_atom_count)
+                .maybe(Self::parse_parentheses_count)
+                .end_choice()
+        })?;
         let (state, number) = state.skip(parse_whitespace).match_optional(parse_decimal)?;
         state.finish(Compound::compound(compound, number.unwrap_or(1.0)))
     }
-
 
     fn parse_parentheses_count(state: ParseState) -> ParseResult<Compound> {
         let (state, _) = state.match_char('(')?;
@@ -90,7 +72,6 @@ impl Compound {
         let (state, number) = state.skip(parse_whitespace).match_optional(parse_decimal)?;
         state.finish(Compound::parentheses(cs, number.unwrap_or(1.0)))
     }
-
 
     fn parse_atom_count(state: ParseState) -> ParseResult<Compound> {
         let (state, atom) = Self::parse_atom(state)?;
@@ -114,12 +95,8 @@ impl Compound {
 
 fn parse_whitespace(state: ParseState) -> ParseResult<()> {
     match state.rest_text.find(|c: char| !c.is_ascii_whitespace()) {
-        None => {
-            state.finish(())
-        }
-        Some(s) => {
-            state.advance(s).finish(())
-        }
+        None => state.finish(()),
+        Some(s) => state.advance(s).finish(()),
     }
 }
 
@@ -132,12 +109,8 @@ fn parse_decimal(state: ParseState) -> ParseResult<f64> {
     })?;
     match rest {
         // usize
-        Some(s) => {
-            state.finish(build_f64(integer, s))
-        }
-        None => {
-            state.finish(integer as f64)
-        }
+        Some(s) => state.finish(build_f64(integer, s)),
+        None => state.finish(integer as f64),
     }
 }
 
@@ -150,7 +123,6 @@ fn build_f64(integer: usize, decimal: usize) -> f64 {
     }
     out
 }
-
 
 // integer = (_? + digit)+
 fn parse_integer(state: ParseState) -> ParseResult<usize> {
@@ -172,15 +144,9 @@ fn parse_integer(state: ParseState) -> ParseResult<usize> {
     }
     if offset.eq(&0) || !has_number {
         Err(StopBecause::MissingString { message: "Except digits", position: state.start_offset })?
-    } else {
+    }
+    else {
         let integer = state.rest_text[..offset].parse().unwrap();
         state.advance(offset).finish(integer)
     }
-}
-
-
-#[test]
-fn test() {
-    let co2 = ChemicalBalancer::from_str("Fe + Cl2 = FeCl3");
-    println!("{:#?}", co2)
 }
