@@ -1,17 +1,7 @@
 use super::*;
+use num::{integer::gcd, rational::Ratio, BigInt, Integer};
 
 impl ChemicalBalancer {
-    pub fn solve(&self) -> Vec<Vec<f64>> {
-        let mut matrix = Vec::new();
-        for i in &self.lhs {
-            matrix.push(i.count_elements(&self.elements));
-        }
-        for i in &self.rhs {
-            matrix.push(i.count_elements(&self.elements));
-        }
-        // transpose matrix
-        null_space(transpose(matrix))
-    }
     pub fn matrix(&self) -> Vec<Vec<f64>> {
         let mut matrix = Vec::new();
         for i in &self.lhs {
@@ -20,14 +10,13 @@ impl ChemicalBalancer {
         for i in &self.rhs {
             matrix.push(i.count_elements(&self.elements));
         }
-        matrix
+        transpose(matrix)
     }
-
+    pub fn solve(&self) -> Vec<Vec<f64>> {
+        null_space(self.matrix())
+    }
     pub fn solve_integers(&self) -> Vec<Vec<isize>> {
-        let a = arr2(&[[1., 2., 3.], [4., 5., 6.]]);
-        let (_, _, v_t) = a.svd(true, true).unwrap();
-        let null_space = v_t.rows(2..).into_owned();
-        println!("{:?}", null_space);
+        self.solve().iter().map(|v| gcd_ints(v)).collect()
     }
 }
 
@@ -40,18 +29,24 @@ fn transpose(matrix: Vec<Vec<f64>>) -> Vec<Vec<f64>> {
     }
     result
 }
-
+//   let ratio_x = Ratio::from_float(x).unwrap();
 // Find the least common multiple that can be reduced to an integer
 // eg. [1.0, 1.5, 1.0] => [2,3,2]
-fn lcm_ints(input: &[f64], scale: f64) -> Vec<isize> {
-    let denominators = input.iter().map(|&x| (x * scale) as isize).collect::<Vec<_>>();
-    let lcm = lcm(&denominators);
-    denominators.iter().map(|&x| lcm / x).collect()
+fn gcd_ints(input: &[f64]) -> Vec<isize> {
+    let ratios = input.iter().map(|&x| close_to_ratio(x)).collect::<Vec<_>>();
+    println!("{:?}", ratios);
+    let denominators = ratios.iter().map(|x| x.denom().clone()).collect::<Vec<_>>();
+    let gcd = denominators.iter().fold(denominators[0].clone(), |acc, x| acc.gcd(x));
+    println!("{:?}", gcd);
+    ratios.iter().map(|x| (x * gcd.clone()).to_integer()).collect::<Vec<_>>()
 }
 
-fn lcm(input: &[isize]) -> isize {
-    use num::integer::lcm;
-    input.iter().fold(input[0], |a, &b| lcm(a, b))
+fn close_to_ratio(x: f64) -> Ratio<isize> {
+    let ratio_x = Ratio::from_float(x).unwrap();
+    let ratio_x = ratio_x.reduce();
+    let ratio_x = ratio_x.to_integer();
+    let ratio_x = Ratio::new(ratio_x, 1);
+    ratio_x
 }
 
 fn null_space(mut matrix: Vec<Vec<f64>>) -> Vec<Vec<f64>> {
