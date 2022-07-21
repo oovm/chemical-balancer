@@ -10,10 +10,12 @@ license = "MPL-2.0"
 edition = "2021"
 
 [dependencies]
-pex = "0.0.1"
+pex = "0.0.3"
 num = "0.4.0"
+tracing = "0.1.37"
 
 [dependencies.rationalize]
+version = "0.1.1"
 path = "../rationalize"
 
 [dev-dependencies]

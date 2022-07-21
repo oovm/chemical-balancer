@@ -14,6 +14,26 @@ impl ChemicalBalancer {
     pub fn solve(&self) -> Vec<Vec<f64>> {
         null_space(self.matrix())
     }
+    pub fn solve_by_mathematica(&self) -> String {
+        let mut result = String::new();
+        result.push_str("NullSpace[Rationalize@{\n");
+        for (i, line) in self.matrix().iter().enumerate() {
+            result.push_str("    {");
+            for (j, item) in line.iter().enumerate() {
+                result.push_str(&format!("{}", item));
+                if j != line.len() - 1 {
+                    result.push_str(", ");
+                }
+            }
+            result.push_str("}");
+            if i != self.matrix().len() - 1 {
+                result.push_str(",\n");
+            }
+        }
+        result.push_str("\n}]");
+        result
+    }
+
     pub fn solve_integers(&self) -> Vec<Vec<isize>> {
         self.solve().iter().map(|v| gcd_ints(v)).collect()
     }
@@ -32,8 +52,8 @@ fn transpose(matrix: Vec<Vec<f64>>) -> Vec<Vec<f64>> {
 // Find the least common multiple that can be reduced to an integer
 // eg. [1.0, 1.5, 1.0] => [2,3,2]
 fn gcd_ints(input: &[f64]) -> Vec<isize> {
-    let ratios = input.iter().map(|&x| float2ratio::<6>(x, 1e-9)).collect::<Vec<_>>();
-    println!("{:?}", ratios);
+    let ratios = input.iter().map(|&x| float2ratio::<10>(x, 1e-10)).collect::<Vec<_>>();
+    // println!("{:?}", ratios);
     let mut denominators = vec![];
     for i in &ratios {
         if i.denom().is_one() {
@@ -41,9 +61,9 @@ fn gcd_ints(input: &[f64]) -> Vec<isize> {
         }
         denominators.push(i.denom());
     }
-    println!("{:?}", denominators);
+    // println!("{:?}", denominators);
     let gcd = denominators.iter().fold(denominators[0].clone(), |acc, x| acc.lcm(x));
-    println!("{:?}", gcd);
+    // println!("{:?}", gcd);
     ratios.iter().map(|x| (x * gcd.clone()).to_integer()).collect::<Vec<_>>()
 }
 
