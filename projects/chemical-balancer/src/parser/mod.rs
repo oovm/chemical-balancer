@@ -1,4 +1,4 @@
-use crate::{ChemicalBalancer, Compound};
+use crate::{ChemicalBalancer, ChemicalTerm};
 use pex::{
     helpers::{make_from_str, whitespace},
     ParseResult, ParseState, StopBecause,
@@ -14,7 +14,7 @@ impl FromStr for ChemicalBalancer {
     }
 }
 
-impl FromStr for Compound {
+impl FromStr for ChemicalTerm {
     type Err = StopBecause;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -34,11 +34,11 @@ impl ChemicalBalancer {
 
         state.finish(out)
     }
-    fn parse_add(state: ParseState) -> ParseResult<Vec<Compound>> {
-        let (state, first) = Compound::parse(state)?;
+    fn parse_add(state: ParseState) -> ParseResult<Vec<ChemicalTerm>> {
+        let (state, first) = ChemicalTerm::parse(state)?;
         let (state, rest) = state.match_repeats(|s| {
             let (s, _) = s.skip(whitespace).match_char('+')?;
-            Compound::parse(s.skip(whitespace))
+            ChemicalTerm::parse(s.skip(whitespace))
         })?;
         let mut out = vec![first];
         out.extend(rest);
@@ -46,29 +46,29 @@ impl ChemicalBalancer {
     }
 }
 
-impl Compound {
+impl ChemicalTerm {
     pub fn parse(state: ParseState) -> ParseResult<Self> {
         let (state, compound) = state.match_repeat_m_n(1, 255, |s| {
             s.skip(whitespace).begin_choice().maybe(Self::parse_atom_count).maybe(Self::parse_parentheses_count).end_choice()
         })?;
         let (state, number) = state.skip(whitespace).match_optional(parse_decimal)?;
-        state.finish(Compound::compound(compound, number.unwrap_or(1.0)))
+        state.finish(ChemicalTerm::compound(compound, number.unwrap_or(1.0)))
     }
 
-    fn parse_parentheses_count(state: ParseState) -> ParseResult<Compound> {
+    fn parse_parentheses_count(state: ParseState) -> ParseResult<ChemicalTerm> {
         let (state, _) = state.match_char('(')?;
         let (state, cs) = state.skip(whitespace).match_repeat_m_n(1, 255, Self::parse)?;
         // println!("Nested {:?}", cs);
         let (state, _) = state.skip(whitespace).match_char(')')?;
         let (state, number) = state.skip(whitespace).match_optional(parse_decimal)?;
-        state.finish(Compound::parentheses(cs, number.unwrap_or(1.0)))
+        state.finish(ChemicalTerm::parentheses(cs, number.unwrap_or(1.0)))
     }
 
-    fn parse_atom_count(state: ParseState) -> ParseResult<Compound> {
+    fn parse_atom_count(state: ParseState) -> ParseResult<ChemicalTerm> {
         let (state, atom) = Self::parse_atom(state)?;
         let (state, number) = state.skip(whitespace).match_optional(parse_decimal)?;
         // println!("{} {:?}", atom, number);
-        state.finish(Compound::atom(atom, number.unwrap_or(1.0)))
+        state.finish(ChemicalTerm::atom(atom, number.unwrap_or(1.0)))
     }
 
     // uppercase letter + lowercase letters

@@ -1,14 +1,14 @@
-use crate::{ChemicalBalancer, Compound, CompoundGroup};
+use crate::{Atom, ChemicalBalancer, ChemicalTerm, CompoundGroup};
 use std::{
-    cmp::Ordering,
     collections::BTreeSet,
     fmt::{Debug, Formatter},
 };
+mod display;
 mod solver;
 use num::{Integer, One};
 use rationalize::float2ratio;
 impl ChemicalBalancer {
-    pub fn count_elements(&self, compound: &Compound) -> Vec<f64> {
+    pub fn count_elements(&self, compound: &ChemicalTerm) -> Vec<f64> {
         compound.count_elements(&self.elements)
     }
     pub fn get_elements(&self) -> &BTreeSet<String> {
@@ -24,15 +24,11 @@ impl ChemicalBalancer {
     }
 }
 
-impl Debug for Compound {
+impl Debug for ChemicalTerm {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Compound::Atom { atom, count, .. } => match count.partial_cmp(&1.0) {
-                Some(Ordering::Equal) => write!(f, "{}", atom),
-
-                _ => write!(f, "{}{}", atom, count),
-            },
-            Compound::Compound { compound, count, .. } => {
+            ChemicalTerm::Atom(atom) => Debug::fmt(atom, f),
+            ChemicalTerm::Compound { compound, count, .. } => {
                 let mut v = &mut f.debug_tuple("Compound");
                 for item in compound {
                     v = v.field(item);
@@ -44,13 +40,13 @@ impl Debug for Compound {
     }
 }
 
-impl Compound {
+impl ChemicalTerm {
     pub fn record_elements(&self, all: &mut BTreeSet<String>) {
         match self {
-            Compound::Atom { atom, .. } => {
-                all.insert(atom.clone());
+            ChemicalTerm::Atom(atom) => {
+                atom.record_elements(all);
             }
-            Compound::Compound { compound, .. } => {
+            ChemicalTerm::Compound { compound, .. } => {
                 for c in compound {
                     c.record_elements(all);
                 }
@@ -58,18 +54,13 @@ impl Compound {
         }
     }
     pub fn count_elements(&self, all: &BTreeSet<String>) -> Vec<f64> {
+        let mut out = vec![0.0; all.len()];
         match self {
-            Compound::Atom { atom, count, .. } => {
-                let mut out = vec![0.0; all.len()];
-                if let Some(i) = all.iter().position(|x| x == atom) {
-                    out[i] = *count;
-                    out
-                }
-                else {
-                    out
-                }
+            ChemicalTerm::Atom(atom) => {
+                atom.count_elements(all, &mut out);
+                out
             }
-            Compound::Compound { compound, count, .. } => {
+            ChemicalTerm::Compound { compound, count, .. } => {
                 let mut out = vec![0.0; all.len()];
                 for c in compound {
                     let sub_out = c.count_elements(all);
@@ -83,23 +74,23 @@ impl Compound {
     }
 }
 
-impl Compound {
+impl ChemicalTerm {
     pub fn atom(atom: String, count: f64) -> Self {
-        Compound::Atom { atom, count, electronic: 0.0 }
+        ChemicalTerm::Atom(Atom { atom, count, electronic: 0.0 })
     }
 
-    pub fn compound(compound: Vec<Compound>, count: f64) -> Self {
-        Compound::Compound { group: CompoundGroup::None, compound, count, electronic: 0.0 }
+    pub fn compound(compound: Vec<ChemicalTerm>, count: f64) -> Self {
+        ChemicalTerm::Compound { group: CompoundGroup::None, compound, count, electronic: 0.0 }
     }
-    pub fn parentheses(compound: Vec<Compound>, count: f64) -> Self {
-        Compound::Compound { group: CompoundGroup::Parentheses, compound, count, electronic: 0.0 }
+    pub fn parentheses(compound: Vec<ChemicalTerm>, count: f64) -> Self {
+        ChemicalTerm::Compound { group: CompoundGroup::Parentheses, compound, count, electronic: 0.0 }
     }
     pub fn with_electronic(mut self, e: f64) -> Self {
         match &mut self {
-            Compound::Atom { electronic, .. } => {
-                *electronic = e;
+            ChemicalTerm::Atom(atom) => {
+                atom.electronic = e;
             }
-            Compound::Compound { electronic, .. } => {
+            ChemicalTerm::Compound { electronic, .. } => {
                 *electronic = e;
             }
         }
