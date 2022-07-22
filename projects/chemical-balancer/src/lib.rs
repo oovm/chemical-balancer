@@ -1,9 +1,7 @@
-mod atom;
 mod chem_atom;
-mod errors;
 mod parser;
+mod term;
 
-pub use errors::{Error, Result};
 use std::collections::BTreeSet;
 
 #[derive(Debug)]
@@ -13,20 +11,16 @@ pub struct ChemicalBalancer {
     rhs: Vec<ChemicalTerm>,
 }
 
-pub struct Atom {
-    atom: String,
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct ChemicalTerm {
+    kind: ChemicalKind,
+    compound: Vec<ChemicalTerm>,
     count: f64,
     electronic: f64,
 }
 
-pub enum ChemicalTerm {
-    Atom(Atom),
-    Compound { group: CompoundGroup, compound: Vec<ChemicalTerm>, count: f64, electronic: f64 },
-}
-
-#[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
-pub enum CompoundGroup {
-    #[default]
-    None,
-    Parentheses,
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ChemicalKind {
+    Atomic(String),
+    Paired(char, char),
 }
