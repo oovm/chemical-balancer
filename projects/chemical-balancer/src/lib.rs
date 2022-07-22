@@ -11,7 +11,7 @@ pub struct ChemicalBalancer {
     rhs: Vec<ChemicalTerm>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct ChemicalTerm {
     kind: ChemicalKind,
     compound: Vec<ChemicalTerm>,
@@ -19,7 +19,7 @@ pub struct ChemicalTerm {
     electronic: f64,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ChemicalKind {
     Atomic(String),
     Paired(char, char),

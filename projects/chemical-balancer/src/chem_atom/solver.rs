@@ -4,12 +4,12 @@ impl ChemicalBalancer {
     pub fn matrix(&self) -> Vec<Vec<f64>> {
         let mut matrix = Vec::new();
         for i in &self.lhs {
-            matrix.push(i.count_elements(&self.elements));
+            matrix.push(self.count_elements(i))
         }
         for i in &self.rhs {
-            matrix.push(i.count_elements(&self.elements));
+            matrix.push(self.count_elements(i));
         }
-        transpose(matrix)
+        matrix
     }
     pub fn solve(&self) -> Vec<Vec<f64>> {
         null_space(self.matrix())

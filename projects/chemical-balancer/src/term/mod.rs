@@ -1,17 +1,24 @@
-use crate::{ChemicalKind, ChemicalTerm, Compound};
+use crate::{ChemicalBalancer, ChemicalKind, ChemicalTerm};
 use std::{
     collections::BTreeSet,
     fmt::{Debug, Formatter},
 };
 
-impl Debug for Compound {
+impl Debug for ChemicalTerm {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let mut v = &mut f.debug_tuple("Compound");
-        for item in &self.compound {
-            v = v.field(item);
+        match &self.kind {
+            ChemicalKind::Atomic(atom) => {
+                write!(f, "{atom}{}", self.count)
+            }
+            ChemicalKind::Paired(_, _) => {
+                let mut v = &mut f.debug_tuple("Compound");
+                for item in &self.compound {
+                    v = v.field(item);
+                }
+                v = v.field(&self.count);
+                v.finish()
+            }
         }
-        v = v.field(&self.count);
-        v.finish()
     }
 }
 
@@ -47,20 +54,46 @@ impl ChemicalTerm {
     }
 }
 
-impl ChemicalTerm {
-    pub fn record_elements(&self, all: &mut BTreeSet<String>) {
-        for c in &self.compound {
-            c.record_elements(all);
+impl ChemicalBalancer {
+    pub fn get_elements(&self) -> &BTreeSet<String> {
+        &self.elements
+    }
+    pub fn record_elements(&mut self) {
+        for i in self.lhs.iter().chain(self.rhs.iter()) {
+            i.record_elements(&mut self.elements);
         }
     }
-    pub fn count_elements(&self, all: &BTreeSet<String>) -> Vec<f64> {
-        let mut out = vec![0.0; all.len()];
-        for c in &self.compound {
-            let sub_out = c.count_elements(all);
-            for (i, v) in sub_out.iter().enumerate() {
-                out[i] += v * self.count;
+    pub fn count_elements(&self, compound: &ChemicalTerm) -> Vec<f64> {
+        let mut out = vec![0.0; self.elements.len()];
+        compound.count_elements(&self.elements, &mut out, 1.0);
+        out
+    }
+}
+
+impl ChemicalTerm {
+    pub fn record_elements(&self, all: &mut BTreeSet<String>) {
+        match &self.kind {
+            ChemicalKind::Atomic(s) => {
+                all.insert(s.clone());
+            }
+            ChemicalKind::Paired(_, _) => {
+                for term in &self.compound {
+                    term.record_elements(all);
+                }
             }
         }
-        out
+    }
+    pub fn count_elements(&self, all: &BTreeSet<String>, out: &mut Vec<f64>, multiplier: f64) {
+        match &self.kind {
+            ChemicalKind::Atomic(s) => {
+                let i = all.iter().position(|v| v == s).unwrap();
+                out[i] += self.count;
+            }
+            ChemicalKind::Paired(_, _) => {
+                for term in &self.compound {
+                    term.count_elements(all, out, multiplier * self.count);
+                }
+            }
+        }
     }
 }
