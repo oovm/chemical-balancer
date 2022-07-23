@@ -1,4 +1,4 @@
-use crate::{ChemicalBalancer, ChemicalTerm};
+use crate::{ChemicalBalancer, ChemicalKind, ChemicalTerm};
 use pex::{
     helpers::{make_from_str, whitespace},
     ParseResult, ParseState, StopBecause,
@@ -49,38 +49,32 @@ impl ChemicalBalancer {
 impl ChemicalTerm {
     pub fn parse(state: ParseState) -> ParseResult<Self> {
         let (state, compound) = state.match_repeat_m_n(1, 255, |s| {
-            s.skip(whitespace).begin_choice().maybe(Self::parse_atom_count).maybe(Self::parse_parentheses_count).end_choice()
+            s.skip(whitespace).begin_choice().maybe(Self::parse_atom_count).maybe(Self::parse_paired).end_choice()
         })?;
         let (state, number) = state.skip(whitespace).match_optional(parse_decimal)?;
         state.finish(ChemicalTerm::compound(compound, number.unwrap_or(1.0)))
     }
 
-    fn parse_parentheses_count(state: ParseState) -> ParseResult<ChemicalTerm> {
+    fn parse_paired(state: ParseState, start: char, end: char) -> ParseResult<(ChemicalTerm, ChemicalKind)> {
+        let kind = ChemicalKind::Paired(start, end);
         let (state, _) = state.match_char('(')?;
         let (state, cs) = state.skip(whitespace).match_repeat_m_n(1, 255, Self::parse)?;
         // println!("Nested {:?}", cs);
         let (state, _) = state.skip(whitespace).match_char(')')?;
         let (state, number) = state.skip(whitespace).match_optional(parse_decimal)?;
-        state.finish(ChemicalTerm::parentheses(cs, number.unwrap_or(1.0)))
-    }
-
-    fn parse_atom_count(state: ParseState) -> ParseResult<ChemicalTerm> {
-        let (state, atom) = Self::parse_atom(state)?;
-        let (state, number) = state.skip(whitespace).match_optional(parse_decimal)?;
-        // println!("{} {:?}", atom, number);
-        state.finish(ChemicalTerm::atom(atom, number.unwrap_or(1.0)))
+        state.finish(ChemicalTerm { kind, compound: vec![], count: 0.0, electronic: 0.0 })
     }
 
     // uppercase letter + lowercase letters
     // eg: C, H, O, Na, Cl, Uuq, Ph(benzene), Benzene
-    fn parse_atom(state: ParseState) -> ParseResult<String> {
+    fn parse_atom(state: ParseState) -> ParseResult<ChemicalTerm> {
         let (state, head) = state.match_char_if(|c| c.is_ascii_uppercase(), "Uppercase letter")?;
         let (state, tail) = state.match_repeats(|s| s.match_char_if(|c| c.is_ascii_lowercase(), "Lowercase letters"))?;
         let mut atom = head.to_string();
         for c in tail {
             atom.push(c);
         }
-        state.finish(atom)
+        state.finish(ChemicalTerm::atom(atom))
     }
 }
 

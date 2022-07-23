@@ -44,9 +44,43 @@ impl ChemicalTerm {
     pub fn is_compound(&self) -> bool {
         !self.is_atom()
     }
+    pub fn get_kind(&self) -> &ChemicalKind {
+        &self.kind
+    }
+    pub fn set_kind(&mut self, kind: ChemicalKind) {
+        self.kind = kind;
+    }
+    pub fn with_kind(mut self, kind: ChemicalKind) -> Self {
+        self.kind = kind;
+        self
+    }
+    pub fn get_atom(&self) -> &str {
+        match &self.kind {
+            ChemicalKind::Atomic(atom) => atom,
+            ChemicalKind::Paired(_, _) => "",
+        }
+    }
+    pub fn get_compound(&self) -> &[ChemicalTerm] {
+        if self.is_atom() {
+            return &[];
+        }
+        &self.compound
+    }
+    pub fn get_number(&self) -> f64 {
+        self.count
+    }
+    pub fn set_number(&mut self, count: f64) {
+        self.count = count;
+    }
     pub fn with_number(mut self, count: f64) -> Self {
         self.count = count;
         self
+    }
+    pub fn get_electronic(&self) -> f64 {
+        self.electronic
+    }
+    pub fn set_electronic(&mut self, e: f64) {
+        self.electronic = e;
     }
     pub fn with_electronic(mut self, e: f64) -> Self {
         self.electronic = e;
