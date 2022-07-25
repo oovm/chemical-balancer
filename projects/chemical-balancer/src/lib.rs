@@ -21,6 +21,7 @@ pub struct ChemicalTerm {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ChemicalKind {
-    Atomic(String),
+    Compound,
     Paired(char, char),
+    Atomic(String),
 }

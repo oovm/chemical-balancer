@@ -26,7 +26,7 @@ impl FromStr for ChemicalTerm {
 impl ChemicalBalancer {
     pub fn parse(state: ParseState) -> ParseResult<Self> {
         let (state, lhs) = ChemicalBalancer::parse_add(state)?;
-        let (state, _) = state.skip(whitespace).match_char('=')?;
+        let (state, _) = state.match_parse(Self::parse_eq)?;
         let (state, rhs) = ChemicalBalancer::parse_add(state.skip(whitespace))?;
 
         let mut out = ChemicalBalancer { elements: Default::default(), lhs, rhs };
@@ -44,25 +44,59 @@ impl ChemicalBalancer {
         out.extend(rest);
         state.finish(out)
     }
+    pub fn parse_eq(state: ParseState) -> ParseResult<String> {
+        let (state, eq) = state
+            .skip(whitespace)
+            .begin_choice()
+            .maybe(|s| s.match_str_static("=", false))
+            .maybe(|s| s.match_str_static("==", false))
+            .maybe(|s| s.match_str_static("=>", false))
+            .maybe(|s| s.match_str_static("->", false))
+            .end_choice()?;
+        state.finish(eq.to_string())
+    }
 }
 
 impl ChemicalTerm {
     pub fn parse(state: ParseState) -> ParseResult<Self> {
-        let (state, compound) = state.match_repeat_m_n(1, 255, |s| {
-            s.skip(whitespace).begin_choice().maybe(Self::parse_atom_count).maybe(Self::parse_paired).end_choice()
-        })?;
-        let (state, number) = state.skip(whitespace).match_optional(parse_decimal)?;
-        state.finish(ChemicalTerm::compound(compound, number.unwrap_or(1.0)))
+        let (state, first) = state.match_repeat_m_n(1, 255, Self::parse_term)?;
+        state.finish(Self::compound(first))
+    }
+    fn parse_term(state: ParseState) -> ParseResult<Self> {
+        let (state, mut term) = state
+            .skip(whitespace)
+            .begin_choice()
+            .maybe(|s| Self::parse_paired(s, '(', ')'))
+            .maybe(|s| Self::parse_paired(s, '[', ']'))
+            .maybe(|s| Self::parse_paired(s, '{', '}'))
+            .maybe(Self::parse_atom)
+            .end_choice()?;
+        // let (state, n) = state.match_optional(Self::parse_electronic)?;
+        // term.set_electronic(n.unwrap_or(1.0));
+        let (state, n) = state.match_optional(Self::parse_number)?;
+        term.set_number(n.unwrap_or(1.0));
+        state.finish(term)
+    }
+    // _? number
+    fn parse_number(state: ParseState) -> ParseResult<f64> {
+        let (state, _) = state.skip(whitespace).match_optional(|s| s.match_char('_'))?;
+        let (state, number) = state.skip(whitespace).match_parse(parse_decimal)?;
+        state.finish(number)
     }
 
-    fn parse_paired(state: ParseState, start: char, end: char) -> ParseResult<(ChemicalTerm, ChemicalKind)> {
+    pub fn parse_electronic(state: ParseState) -> ParseResult<f64> {
+        let (state, _) = state.skip(whitespace).match_optional(|s| s.match_char('^'))?;
+        let (state, number) = state.skip(whitespace).match_parse(parse_decimal)?;
+        state.finish(number)
+    }
+
+    fn parse_paired(state: ParseState, start: char, end: char) -> ParseResult<ChemicalTerm> {
         let kind = ChemicalKind::Paired(start, end);
-        let (state, _) = state.match_char('(')?;
-        let (state, cs) = state.skip(whitespace).match_repeat_m_n(1, 255, Self::parse)?;
+        let (state, _) = state.match_char(start)?;
+        let (state, compound) = state.skip(whitespace).match_repeat_m_n(1, 255, Self::parse)?;
         // println!("Nested {:?}", cs);
-        let (state, _) = state.skip(whitespace).match_char(')')?;
-        let (state, number) = state.skip(whitespace).match_optional(parse_decimal)?;
-        state.finish(ChemicalTerm { kind, compound: vec![], count: 0.0, electronic: 0.0 })
+        let (state, _) = state.skip(whitespace).match_char(end)?;
+        state.finish(ChemicalTerm { kind, compound, count: 1.0, electronic: 0.0 })
     }
 
     // uppercase letter + lowercase letters
@@ -108,9 +142,9 @@ fn parse_integer(state: ParseState) -> ParseResult<usize> {
     let mut has_number = false;
     for c in state.rest_text.chars() {
         match c {
-            '_' => {
-                offset += 1;
-            }
+            // '_' => {
+            //     offset += 1;
+            // }
             '0'..='9' => {
                 has_number = true;
                 offset += 1;

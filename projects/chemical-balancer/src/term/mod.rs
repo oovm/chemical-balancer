@@ -10,7 +10,7 @@ impl Debug for ChemicalTerm {
             ChemicalKind::Atomic(atom) => {
                 write!(f, "{atom}{}", self.count)
             }
-            ChemicalKind::Paired(_, _) => {
+            ChemicalKind::Compound | ChemicalKind::Paired(_, _) => {
                 let mut v = &mut f.debug_tuple("Compound");
                 for item in &self.compound {
                     v = v.field(item);
@@ -29,6 +29,10 @@ impl ChemicalTerm {
     {
         ChemicalTerm { kind: ChemicalKind::Atomic(atom.into()), compound: vec![], count: 1.0, electronic: 0.0 }
     }
+    pub fn compound(compound: Vec<ChemicalTerm>) -> Self {
+        ChemicalTerm { kind: ChemicalKind::Compound, compound, count: 1.0, electronic: 0.0 }
+    }
+
     pub fn parentheses(compound: Vec<ChemicalTerm>) -> Self {
         ChemicalTerm { kind: ChemicalKind::Paired('(', ')'), compound, count: 1.0, electronic: 0.0 }
     }
@@ -58,6 +62,7 @@ impl ChemicalTerm {
         match &self.kind {
             ChemicalKind::Atomic(atom) => atom,
             ChemicalKind::Paired(_, _) => "",
+            ChemicalKind::Compound => "",
         }
     }
     pub fn get_compound(&self) -> &[ChemicalTerm] {
@@ -110,7 +115,7 @@ impl ChemicalTerm {
             ChemicalKind::Atomic(s) => {
                 all.insert(s.clone());
             }
-            ChemicalKind::Paired(_, _) => {
+            ChemicalKind::Compound | ChemicalKind::Paired(_, _) => {
                 for term in &self.compound {
                     term.record_elements(all);
                 }
@@ -123,7 +128,7 @@ impl ChemicalTerm {
                 let i = all.iter().position(|v| v == s).unwrap();
                 out[i] += self.count;
             }
-            ChemicalKind::Paired(_, _) => {
+            ChemicalKind::Compound | ChemicalKind::Paired(_, _) => {
                 for term in &self.compound {
                     term.count_elements(all, out, multiplier * self.count);
                 }
