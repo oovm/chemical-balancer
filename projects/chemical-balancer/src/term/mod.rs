@@ -1,26 +1,11 @@
 use crate::{ChemicalBalancer, ChemicalKind, ChemicalTerm};
+use num::Zero;
 use std::{
     collections::BTreeSet,
     fmt::{Debug, Formatter},
 };
 
-impl Debug for ChemicalTerm {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match &self.kind {
-            ChemicalKind::Atomic(atom) => {
-                write!(f, "{atom}{}", self.count)
-            }
-            ChemicalKind::Compound | ChemicalKind::Paired(_, _) => {
-                let mut v = &mut f.debug_tuple("Compound");
-                for item in &self.compound {
-                    v = v.field(item);
-                }
-                v = v.field(&self.count);
-                v.finish()
-            }
-        }
-    }
-}
+mod display;
 
 impl ChemicalTerm {
     pub fn atom<S>(atom: S) -> Self
@@ -116,6 +101,9 @@ impl ChemicalTerm {
                 all.insert(s.clone());
             }
             ChemicalKind::Compound | ChemicalKind::Paired(_, _) => {
+                if !self.electronic.is_zero() {
+                    all.insert("e".to_string());
+                }
                 for term in &self.compound {
                     term.record_elements(all);
                 }
@@ -123,14 +111,21 @@ impl ChemicalTerm {
         }
     }
     pub fn count_elements(&self, all: &BTreeSet<String>, out: &mut Vec<f64>, multiplier: f64) {
+        let count = self.count * multiplier;
+        match all.iter().position(|v| v == "e") {
+            Some(s) => {
+                out[s] += self.electronic * multiplier;
+            }
+            None => {}
+        }
         match &self.kind {
             ChemicalKind::Atomic(s) => {
                 let i = all.iter().position(|v| v == s).unwrap();
-                out[i] += self.count;
+                out[i] += count;
             }
             ChemicalKind::Compound | ChemicalKind::Paired(_, _) => {
                 for term in &self.compound {
-                    term.count_elements(all, out, multiplier * self.count);
+                    term.count_elements(all, out, count);
                 }
             }
         }
