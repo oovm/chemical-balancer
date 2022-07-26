@@ -7,6 +7,6 @@ use rationalize::float2ratio;
 
 impl ChemicalBalancer {
     pub fn compounds(&self) -> impl Iterator<Item = &ChemicalTerm> {
-        self.lhs.iter().chain(self.rhs.iter())
+        self.equation.iter()
     }
 }

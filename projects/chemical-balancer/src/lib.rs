@@ -7,8 +7,7 @@ use std::collections::BTreeSet;
 #[derive(Debug)]
 pub struct ChemicalBalancer {
     elements: BTreeSet<String>,
-    lhs: Vec<ChemicalTerm>,
-    rhs: Vec<ChemicalTerm>,
+    equation: Vec<ChemicalTerm>,
 }
 
 #[derive(Clone, PartialEq)]

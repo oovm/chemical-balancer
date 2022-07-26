@@ -25,11 +25,11 @@ impl FromStr for ChemicalTerm {
 
 impl ChemicalBalancer {
     pub fn parse(state: ParseState) -> ParseResult<Self> {
-        let (state, lhs) = ChemicalBalancer::parse_add(state)?;
+        let (state, mut equation) = ChemicalBalancer::parse_add(state)?;
         let (state, _) = state.match_parse(Self::parse_eq)?;
         let (state, rhs) = ChemicalBalancer::parse_add(state.skip(whitespace))?;
-
-        let mut out = ChemicalBalancer { elements: Default::default(), lhs, rhs };
+        equation.extend(rhs);
+        let mut out = ChemicalBalancer { elements: Default::default(), equation };
         out.record_elements();
 
         state.finish(out)

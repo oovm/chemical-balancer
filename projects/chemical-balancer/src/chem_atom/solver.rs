@@ -4,11 +4,8 @@ use num::Zero;
 impl ChemicalBalancer {
     pub fn matrix(&self) -> Vec<Vec<f64>> {
         let mut matrix = Vec::new();
-        for i in &self.lhs {
+        for i in &self.equation {
             matrix.push(self.count_elements(i))
-        }
-        for i in &self.rhs {
-            matrix.push(self.count_elements(i));
         }
         transpose(matrix)
     }

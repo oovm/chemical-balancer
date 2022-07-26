@@ -83,7 +83,7 @@ impl ChemicalBalancer {
         &self.elements
     }
     pub fn record_elements(&mut self) {
-        for i in self.lhs.iter().chain(self.rhs.iter()) {
+        for i in &self.equation {
             i.record_elements(&mut self.elements);
         }
     }
