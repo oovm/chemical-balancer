@@ -49,11 +49,17 @@ pub fn continued_fraction_expansion<const N: usize>(n: f64, min: f64) -> [usize;
 /// assert_eq!(cfe, Ratio::new(355, 113));
 /// ```
 pub fn float2ratio<const N: usize>(n: f64, min: f64) -> Ratio<isize> {
-    let cfe = continued_fraction_expansion::<N>(n, min);
-    let (numer, denom) = build_ratio(&cfe).into();
     match n.is_sign_negative() {
-        true => Ratio::new(-(numer as isize), denom as isize),
-        false => Ratio::new(numer as isize, denom as isize),
+        true => {
+            let cfe = continued_fraction_expansion::<N>(-n, min);
+            let (numer, denom) = build_ratio(&cfe).into();
+            -Ratio::new(numer as isize, denom as isize)
+        }
+        false => {
+            let cfe = continued_fraction_expansion::<N>(n, min);
+            let (numer, denom) = build_ratio(&cfe).into();
+            Ratio::new(numer as isize, denom as isize)
+        }
     }
 }
 

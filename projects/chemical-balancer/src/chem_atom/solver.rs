@@ -54,6 +54,7 @@ fn transpose(matrix: Vec<Vec<f64>>) -> Vec<Vec<f64>> {
 // eg. [1.0, 1.5, 1.0] => [2,3,2]
 fn gcd_ints(input: &[f64]) -> Vec<isize> {
     let ratios = input.iter().map(|&x| float2ratio::<10>(x, 1e-10)).collect::<Vec<_>>();
+    // println!("{:?}", ratios);
     let mut denominators = vec![];
     for i in &ratios {
         if i.denom().is_one() || i.denom().is_zero() {
@@ -61,6 +62,7 @@ fn gcd_ints(input: &[f64]) -> Vec<isize> {
         }
         denominators.push(i.denom());
     }
+    // println!("{:?}", denominators);
     let gcd = if denominators.is_empty() { 1 } else { denominators.iter().fold(denominators[0].clone(), |acc, x| acc.lcm(x)) };
     // println!("{:?}", gcd);
     ratios.iter().map(|x| (x * gcd.clone()).to_integer()).collect::<Vec<_>>()
@@ -113,6 +115,7 @@ fn null_space(mut matrix: Vec<Vec<f64>>) -> Vec<Vec<f64>> {
     null_space
 }
 
+#[allow(dead_code)]
 fn keep_first_positive(matrix: &mut Vec<Vec<f64>>) {
     for i in 0..matrix.len() {
         for j in 0..matrix[i].len() {
@@ -124,13 +127,10 @@ fn keep_first_positive(matrix: &mut Vec<Vec<f64>>) {
 }
 
 #[test]
-fn test() {
+fn test_ns() {
     let out = null_space(vec![vec![1.0, 0.0, 0.0, -1.0], vec![0.0, 2.0, -1.0, 0.0], vec![-2.0, 0.0, 1.0, 0.0]]);
     // to wolfram
     // NullSpace[{{1, 0, 0, -1}, {0, 2, -1, 0}, {-2, 0, 1, 0}}]
-
-    // [1.0, 1.5, 1.0]
-
     println!("{:#?}", out);
     assert_eq!(out, vec![vec![1.0, 1.0, 2.0, 1.0]])
 }
