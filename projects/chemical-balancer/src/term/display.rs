@@ -9,7 +9,7 @@ impl Debug for ChemicalTerm {
             ChemicalKind::Atomic(atom) => {
                 write!(f, "{atom}{}", self.count)
             }
-            ChemicalKind::Compound | ChemicalKind::Paired(_, _) => {
+            ChemicalKind::Compound | ChemicalKind::Paired(_, _) | ChemicalKind::Attached(_) => {
                 let mut v = &mut f.debug_tuple("Compound");
                 for item in &self.compound {
                     v = v.field(item);
@@ -39,6 +39,12 @@ impl Display for ChemicalTerm {
             }
             ChemicalKind::Atomic(s) => {
                 f.write_str(s)?;
+            }
+            ChemicalKind::Attached(s) => {
+                f.write_char(*s)?;
+                for item in &self.compound {
+                    Display::fmt(item, f)?;
+                }
             }
         }
         if !self.count.is_one() {

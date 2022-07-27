@@ -48,6 +48,7 @@ impl ChemicalTerm {
             ChemicalKind::Atomic(atom) => atom,
             ChemicalKind::Paired(_, _) => "",
             ChemicalKind::Compound => "",
+            ChemicalKind::Attached(_) => "",
         }
     }
     pub fn get_compound(&self) -> &[ChemicalTerm] {
@@ -100,7 +101,7 @@ impl ChemicalTerm {
             ChemicalKind::Atomic(s) => {
                 all.insert(s.clone());
             }
-            ChemicalKind::Compound | ChemicalKind::Paired(_, _) => {
+            ChemicalKind::Compound | ChemicalKind::Paired(_, _) | ChemicalKind::Attached(_) => {
                 if !self.electronic.is_zero() {
                     all.insert("e".to_string());
                 }
@@ -123,7 +124,7 @@ impl ChemicalTerm {
                 let i = all.iter().position(|v| v == s).unwrap();
                 out[i] += count;
             }
-            ChemicalKind::Compound | ChemicalKind::Paired(_, _) => {
+            ChemicalKind::Compound | ChemicalKind::Paired(_, _) | ChemicalKind::Attached(_) => {
                 for term in &self.compound {
                     term.count_elements(all, out, count);
                 }

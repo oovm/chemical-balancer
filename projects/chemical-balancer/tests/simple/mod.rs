@@ -1,6 +1,5 @@
 use super::*;
 use chemical_balancer::ChemicalTerm;
-use latexify::Latexify;
 
 #[test]
 pub fn test_ph2() {
