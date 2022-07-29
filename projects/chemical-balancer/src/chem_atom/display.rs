@@ -1,6 +1,6 @@
 use crate::{ChemicalBalancer, ChemicalKind, ChemicalTerm};
 use latexify::Latexify;
-use mathml_core::{MathIdentifier, MathML, MathMultiScript, MathRow, MathStyle};
+use mathml_core::{MathIdentifier, MathML, MathMultiScript, MathRow};
 use std::fmt::Write;
 
 impl Latexify for ChemicalBalancer {
@@ -22,7 +22,12 @@ impl From<ChemicalTerm> for MathML {
         match &value.kind {
             ChemicalKind::Atomic(atom) => {
                 let base = MathIdentifier::normal(atom);
-                MathMultiScript::sub_script(base.into(), value.count.into()).into()
+                if value.count == 1.0 {
+                    base.into()
+                }
+                else {
+                    MathMultiScript::sub_script(base.into(), value.count.into()).into()
+                }
             }
             ChemicalKind::Compound => {
                 let terms = value.compound.into_iter().map(|term| term.into());

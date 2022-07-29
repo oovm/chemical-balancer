@@ -4,7 +4,7 @@ use chemical_balancer::ChemicalTerm;
 #[test]
 pub fn test_ph2() {
     let ph2 = ChemicalTerm::from_str("Ph2").unwrap();
-    assert_eq!("Compound(Ph2, 1.0)", format!("{:?}", ph2));
+    assert_eq!("Ph2", format!("{:?}", ph2));
     let c6h5 = ChemicalTerm::from_str("C6H5COOH").unwrap();
     assert_eq!("Compound(C6, H5, C1, O1, O1, H1, 1.0)", format!("{:?}", c6h5))
 }

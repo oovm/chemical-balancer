@@ -59,9 +59,10 @@ impl ChemicalBalancer {
 
 impl ChemicalTerm {
     pub fn parse(state: ParseState) -> ParseResult<Self> {
-        let (state, first) = state.match_repeat_m_n(1, 255, Self::parse_term)?;
-        state.finish(Self::compound(first))
+        let (state, terms) = state.match_repeat_m_n(1, 255, Self::parse_term)?;
+        state.finish(Self::compound(terms).refine())
     }
+
     fn parse_term(state: ParseState) -> ParseResult<Self> {
         let (state, mut term) = state
             .skip(whitespace)

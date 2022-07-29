@@ -79,6 +79,18 @@ impl ChemicalTerm {
     }
 }
 
+impl ChemicalTerm {
+    pub fn refine(&self) -> Self {
+        match self.kind {
+            ChemicalKind::Compound => {
+                let compound: Vec<_> = self.compound.iter().map(|v| v.refine()).collect();
+                if compound.len() == 1 && self.count == 1.0 { compound[0].clone() } else { self.clone() }
+            }
+            _ => self.clone(),
+        }
+    }
+}
+
 impl ChemicalBalancer {
     pub fn get_elements(&self) -> &BTreeSet<String> {
         &self.elements
