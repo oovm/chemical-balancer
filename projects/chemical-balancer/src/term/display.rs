@@ -59,9 +59,8 @@ impl Display for ChemicalTerm {
 }
 
 impl Latexify for ChemicalTerm {
-    type Context = ();
-
-    fn latexify(&self) -> String {
-        format!("\\ce{{{}}}", self)
+    fn fmt<W: Write>(&self, f: &mut W) -> std::fmt::Result {
+        // format!("\\ce{{{}}}", self)
+        todo!()
     }
 }

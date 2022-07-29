@@ -1,17 +1,40 @@
-use crate::ChemicalBalancer;
+use crate::{ChemicalBalancer, ChemicalKind, ChemicalTerm};
 use latexify::Latexify;
+use mathml_core::{MathIdentifier, MathML, MathMultiScript, MathRow, MathStyle};
+use std::fmt::Write;
 
 impl Latexify for ChemicalBalancer {
-    type Context = ();
+    fn fmt<W: Write>(&self, f: &mut W) -> std::fmt::Result {
+        // let mut out = String::new();
+        // for (index, term) in self.equation.iter().enumerate() {
+        //     if index != 0 {
+        //         out.push_str(" + ");
+        //     }
+        //     out.push_str(&term.latexify());
+        // }
+        // out
+        todo!()
+    }
+}
 
-    fn latexify(&self) -> String {
-        let mut out = String::new();
-        for (index, term) in self.equation.iter().enumerate() {
-            if index != 0 {
-                out.push_str(" + ");
+impl From<ChemicalTerm> for MathML {
+    fn from(value: ChemicalTerm) -> Self {
+        match &value.kind {
+            ChemicalKind::Atomic(atom) => {
+                let base = MathIdentifier::normal(atom);
+                MathMultiScript::sub_script(base.into(), value.count.into()).into()
             }
-            out.push_str(&term.latexify());
+            ChemicalKind::Compound => {
+                let terms = value.compound.into_iter().map(|term| term.into());
+                let mrow = MathRow::new(terms);
+                mrow.into()
+            }
+            ChemicalKind::Paired(_, _) => {
+                todo!()
+            }
+            ChemicalKind::Attached(_) => {
+                todo!()
+            }
         }
-        out
     }
 }

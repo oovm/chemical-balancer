@@ -1,6 +1,6 @@
 use crate::{ChemicalBalancer, ChemicalKind, ChemicalTerm};
 use pex::{
-    helpers::{make_from_str, whitespace},
+    helpers::{decimal_string, make_from_str, whitespace},
     ParseResult, ParseState, StopBecause,
 };
 use std::str::FromStr;
@@ -26,7 +26,7 @@ impl FromStr for ChemicalTerm {
 impl ChemicalBalancer {
     pub fn parse(state: ParseState) -> ParseResult<Self> {
         let (state, mut equation) = ChemicalBalancer::parse_add(state)?;
-        let (state, _) = state.match_parse(Self::parse_eq)?;
+        let (state, _) = state.match_fn(Self::parse_eq)?;
         let (state, rhs) = ChemicalBalancer::parse_add(state.skip(whitespace))?;
         equation.extend(rhs);
         let mut out = ChemicalBalancer { elements: Default::default(), equation };
@@ -48,10 +48,10 @@ impl ChemicalBalancer {
         let (state, eq) = state
             .skip(whitespace)
             .begin_choice()
-            .maybe(|s| s.match_str_static("=", false))
-            .maybe(|s| s.match_str_static("==", false))
-            .maybe(|s| s.match_str_static("=>", false))
-            .maybe(|s| s.match_str_static("->", false))
+            .or_else(|s| s.match_str("="))
+            .or_else(|s| s.match_str("=="))
+            .or_else(|s| s.match_str("=>"))
+            .or_else(|s| s.match_str("->"))
             .end_choice()?;
         state.finish(eq.to_string())
     }
@@ -66,10 +66,10 @@ impl ChemicalTerm {
         let (state, mut term) = state
             .skip(whitespace)
             .begin_choice()
-            .maybe(|s| Self::parse_paired(s, '(', ')'))
-            .maybe(|s| Self::parse_paired(s, '[', ']'))
-            .maybe(|s| Self::parse_paired(s, '{', '}'))
-            .maybe(Self::parse_atom)
+            .or_else(|s| Self::parse_paired(s, '(', ')'))
+            .or_else(|s| Self::parse_paired(s, '[', ']'))
+            .or_else(|s| Self::parse_paired(s, '{', '}'))
+            .or_else(Self::parse_atom)
             .end_choice()?;
         // let (state, n) = state.match_optional(Self::parse_electronic)?;
         // term.set_electronic(n.unwrap_or(1.0));
@@ -80,13 +80,13 @@ impl ChemicalTerm {
     // _? number
     fn parse_number(state: ParseState) -> ParseResult<f64> {
         let (state, _) = state.skip(whitespace).match_optional(|s| s.match_char('_'))?;
-        let (state, number) = state.skip(whitespace).match_parse(parse_decimal)?;
+        let (state, number) = state.skip(whitespace).match_fn(parse_decimal)?;
         state.finish(number)
     }
 
     pub fn parse_electronic(state: ParseState) -> ParseResult<f64> {
         let (state, _) = state.skip(whitespace).match_optional(|s| s.match_char('^'))?;
-        let (state, number) = state.skip(whitespace).match_parse(parse_decimal)?;
+        let (state, number) = state.skip(whitespace).match_fn(parse_decimal)?;
         state.finish(number)
     }
 
@@ -114,51 +114,7 @@ impl ChemicalTerm {
 
 // decimal = integer (. integer)?
 fn parse_decimal(state: ParseState) -> ParseResult<f64> {
-    let (state, integer) = parse_integer(state)?;
-    let (state, rest) = state.match_optional(|s| {
-        let (s, _) = s.match_char('.')?;
-        parse_integer(s)
-    })?;
-    match rest {
-        // usize
-        Some(s) => state.finish(build_f64(integer, s)),
-        None => state.finish(integer as f64),
-    }
-}
-
-fn build_f64(integer: usize, decimal: usize) -> f64 {
-    let mut out = integer as f64;
-    let mut decimal = decimal as f64;
-    while decimal > 0.0 {
-        decimal /= 10.0;
-        out += decimal;
-    }
-    out
-}
-
-// integer = (_? + digit)+
-fn parse_integer(state: ParseState) -> ParseResult<usize> {
-    let mut offset = 0;
-    let mut has_number = false;
-    for c in state.rest_text.chars() {
-        match c {
-            // '_' => {
-            //     offset += 1;
-            // }
-            '0'..='9' => {
-                has_number = true;
-                offset += 1;
-            }
-            _ => {
-                break;
-            }
-        }
-    }
-    if offset.eq(&0) || !has_number {
-        Err(StopBecause::MissingString { message: "Except digits", position: state.start_offset })?
-    }
-    else {
-        let integer = state.rest_text[..offset].parse().unwrap();
-        state.advance(offset).finish(integer)
-    }
+    let (state, a) = decimal_string(state)?;
+    let a = f64::from_str(a)?;
+    state.finish(a)
 }
