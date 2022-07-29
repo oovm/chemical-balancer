@@ -1,4 +1,6 @@
-mod short;
+mod annealing;
 mod shortest;
 
-pub use crate::{short::short_super_string, shortest::shortest_super_string};
+pub use crate::shortest::shortest_super_string;
+
+pub use crate::annealing::SimulatedAnnealing;
