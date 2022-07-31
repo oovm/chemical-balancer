@@ -92,9 +92,14 @@ impl ChemicalTerm {
 }
 
 impl ChemicalBalancer {
+    /// Get the index of the first term that is not an atom.
+    pub fn get_term(&self, index: usize) -> Option<ChemicalTerm> {
+        self.equation.get(index).cloned()
+    }
     pub fn get_elements(&self) -> &BTreeSet<String> {
         &self.elements
     }
+
     pub fn record_elements(&mut self) {
         for i in &self.equation {
             i.record_elements(&mut self.elements);

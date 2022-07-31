@@ -1,5 +1,6 @@
 use super::*;
 use latexify::Latexify;
+use mathml_core::{MathIdentifier, MathML, MathMultiScript, MathRow};
 use num::One;
 use std::fmt::{Display, Write};
 
@@ -58,9 +59,37 @@ impl Display for ChemicalTerm {
     }
 }
 
+impl From<ChemicalTerm> for MathML {
+    fn from(value: ChemicalTerm) -> Self {
+        match &value.kind {
+            ChemicalKind::Atomic(atom) => {
+                let base = MathIdentifier::normal(atom);
+                if value.count == 1.0 {
+                    base.into()
+                }
+                else {
+                    MathMultiScript::sub_script(base.into(), value.count.into()).into()
+                }
+            }
+            ChemicalKind::Compound => {
+                let terms = value.compound.into_iter().map(|term| term.into());
+                let row = MathRow::new(terms);
+                row.into()
+            }
+            ChemicalKind::Paired(_, _) => {
+                todo!()
+            }
+            ChemicalKind::Attached(_) => {
+                todo!()
+            }
+        }
+    }
+}
+
 impl Latexify for ChemicalTerm {
     fn fmt<W: Write>(&self, f: &mut W) -> std::fmt::Result {
-        // format!("\\ce{{{}}}", self)
-        todo!()
+        f.write_str("\\ce{")?;
+        f.write_str(&self.to_string())?;
+        f.write_str("}")
     }
 }

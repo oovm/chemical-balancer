@@ -2,6 +2,7 @@ use super::*;
 use num::Zero;
 
 impl ChemicalBalancer {
+    /// Build the problem matrix
     pub fn matrix(&self) -> Vec<Vec<f64>> {
         let mut matrix = Vec::new();
         for i in &self.equation {
@@ -9,9 +10,11 @@ impl ChemicalBalancer {
         }
         transpose(matrix)
     }
+    /// Solve the equation by null space method
     pub fn solve(&self) -> Vec<Vec<f64>> {
         null_space(self.matrix())
     }
+    /// High-Precision checking by mathematica
     pub fn solve_by_mathematica(&self) -> String {
         let mut result = String::new();
         result.push_str("NullSpace[Rationalize@{\n");
@@ -31,7 +34,7 @@ impl ChemicalBalancer {
         result.push_str("\n}]");
         result
     }
-
+    /// Solve the equation and convert the result to integers
     pub fn solve_integers(&self) -> Vec<Vec<isize>> {
         self.solve().iter().map(|v| gcd_ints(v)).collect()
     }
