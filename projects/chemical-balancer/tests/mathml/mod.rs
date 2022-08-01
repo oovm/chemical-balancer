@@ -22,6 +22,15 @@ pub fn test_benzoic_acid() {
     assert_no_ws(&display_mathml(mathml), include_str!("equation1.xml"))
 }
 
+#[test]
+pub fn test_benzoic_acid2() {
+    let input = ChemicalBalancer::from_str("C + CO + CO2 = O2").unwrap();
+    println!("{}", input.solve_by_mathematica());
+    let solved = cast_isize_to_f64(input.solve_integers());
+    let mathml = input.render_mathml(&solved);
+    assert_no_ws(&display_mathml(mathml), include_str!("equation2.xml"))
+}
+
 fn cast_isize_to_f64(v: Vec<Vec<isize>>) -> Vec<Vec<f64>> {
     v.iter().map(|v| v.iter().map(|&x| x as f64).collect()).collect()
 }
