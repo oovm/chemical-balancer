@@ -1,4 +1,4 @@
-use crate::display_mathml;
+use crate::{assert_by_ws, display_mathml};
 use chemical_balancer::{ChemicalBalancer, ChemicalTerm};
 use mathml_core::{helpers::assert_no_ws, MathML};
 use std::str::FromStr;

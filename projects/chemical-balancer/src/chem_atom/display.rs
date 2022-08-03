@@ -18,8 +18,13 @@ impl Latexify for ChemicalBalancer {
 impl ChemicalBalancer {
     pub fn render_mathml(&self, solved: &[Vec<f64>]) -> MathML {
         if solved.len() > 1 {
-            let rows: Vec<_> = solved.iter().map(|coefficients| self.render_mathml_row(coefficients)).collect();
-            cases(rows)
+            let mut lines = vec![];
+            for coefficients in solved {
+                let line = self.render_mathml_row(coefficients);
+                lines.push(line);
+                lines.push(MathML::NewLine)
+            }
+            cases(lines)
         }
         else {
             let coefficients = solved[0].as_slice();
@@ -30,13 +35,13 @@ impl ChemicalBalancer {
     fn render_mathml_row(&self, coefficients: &[f64]) -> MathML {
         let mut lhs = Vec::new();
         let mut rhs = Vec::new();
-        for (index, coefficient) in coefficients.iter().enumerate() {
+        for (index, &coefficient) in coefficients.iter().enumerate() {
             let item = self.get_term(index).expect("item index out of range");
-            if coefficient.is_sign_positive() {
-                rhs.push((*coefficient, item));
+            if coefficient > 0.0 {
+                rhs.push((coefficient, item));
             }
-            else if coefficient.is_sign_negative() {
-                lhs.push((-*coefficient, item));
+            else if coefficient < 0.0 {
+                lhs.push((-coefficient, item));
             }
             else {
                 // zero, drop
@@ -55,7 +60,9 @@ fn push_pair(eqation: &mut Vec<MathML>, terms: Vec<(f64, ChemicalTerm)>) {
         if index != 0 {
             eqation.push(MathOperator::new("+").into())
         }
-        eqation.push(MathNumber::new(coefficient).into());
+        if coefficient != 1.0 {
+            eqation.push(MathNumber::new(coefficient).into());
+        }
         eqation.push(item.into())
     }
 }

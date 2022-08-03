@@ -1,3 +1,4 @@
+#![allow(unused, dead_code)]
 use chemical_balancer::ChemicalBalancer;
 use mathml_core::{MathML, MathRoot};
 use std::str::FromStr;
