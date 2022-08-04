@@ -1,5 +1,5 @@
 [package]
-name = "chemical-web"
+name = "chemical-ui"
 publish = false
 version = "0.0.0"
 authors = ["Aster <192607617@qq.com>"]
@@ -10,8 +10,18 @@ readme = "Readme.md"
 license = "MPL-2.0"
 edition = "2021"
 
+[[bin]]
+name = "chemical-web"
+path = "website/main.rs"
+
+[[bin]]
+name = "chemical-balancer"
+path = "desktop/main.rs"
+
 [dependencies]
 dioxus = "0.3.2"
+dioxus-desktop = "0.3.0"
+dioxus-web = "0.3.1"
 dioxus-use-storage = "0.3.1"
 
 [dependencies.chemical-balancer]
