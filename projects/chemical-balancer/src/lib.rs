@@ -4,7 +4,7 @@ mod term;
 
 use std::collections::BTreeSet;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct ChemicalBalancer {
     elements: BTreeSet<String>,
     equation: Vec<ChemicalTerm>,
