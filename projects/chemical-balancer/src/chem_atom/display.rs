@@ -17,18 +17,18 @@ impl Latexify for ChemicalBalancer {
 
 impl ChemicalBalancer {
     pub fn render_mathml(&self, solved: &[Vec<f64>]) -> MathML {
-        if solved.len() > 1 {
-            let mut lines = vec![];
-            for coefficients in solved {
-                let line = self.render_mathml_row(coefficients);
-                lines.push(line);
-                lines.push(MathML::NewLine)
+        match solved {
+            [] => MathML::error("no solution"),
+            [coefficients] => self.render_mathml_row(coefficients),
+            _ => {
+                let mut lines = vec![];
+                for coefficients in solved {
+                    let line = self.render_mathml_row(coefficients);
+                    lines.push(line);
+                    lines.push(MathML::NewLine)
+                }
+                cases(lines)
             }
-            cases(lines)
-        }
-        else {
-            let coefficients = solved[0].as_slice();
-            self.render_mathml_row(coefficients)
         }
     }
 

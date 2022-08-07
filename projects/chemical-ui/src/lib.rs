@@ -1,10 +1,7 @@
 #![allow(non_snake_case)]
 
-use dioxus::html::textarea;
-// import the prelude to get access to the `rsx!` macro and the `Scope` and `Element` types
-use crate::hooks::use_chemical_balancer;
+pub use crate::hooks::{use_chemical_balancer, UseChemicalBalancer};
 use dioxus::prelude::*;
-
 mod hooks;
 
 // create a component that renders a div with the text "Hello, world!"
@@ -16,14 +13,20 @@ pub fn Editor(cx: Scope) -> Element {
     cx.render(rsx! {
         div {
             h2 { "Chemical Balancer" }
-            input {
-                placeholder: "Type here",
-                value: "{text}",
-                oninput: move |e| text.set(e.value.to_owned()),
+            div {
+                // align center
+                style: "display: flex; justify-content: center;",
+                textarea {
+                    style: "width: 90%;",
+                    rows: 3,
+                    placeholder: "{PLACE_HOLDER}",
+                    value: "{text}",
+                    oninput: move |e| text.set(e.value.to_owned()),
+                }
             }
-            h2 { "Balanced Equation" }
+            h3 { "Balanced Equation" }
             chem.as_mathml()
-            h2 {
+            h3 {
                 "High-Precision Checking"
             }
             chem.as_mathematica()

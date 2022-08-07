@@ -1,11 +1,13 @@
-use chemical_balancer::{helpers::cast_isize_to_f64, ChemicalBalancer};
+use chemical_balancer::{
+    helpers::{cast_isize_to_f64, display_mathml},
+    ChemicalBalancer,
+};
 use dioxus::prelude::*;
-use std::{cell::RefCell, rc::Rc, str::FromStr, sync::Arc};
+use std::{cell::RefCell, rc::Rc, str::FromStr};
 
 #[derive(Clone)]
 pub struct UseChemicalBalancer {
     data: Rc<RefCell<BalancerData>>,
-    notify: Arc<dyn Fn() + Send + Sync + 'static>,
 }
 
 pub fn use_chemical_balancer(cx: &ScopeState) -> &mut UseChemicalBalancer {
@@ -15,7 +17,7 @@ pub fn use_chemical_balancer(cx: &ScopeState) -> &mut UseChemicalBalancer {
             balancer: ChemicalBalancer::default(),
             error: "".to_string(),
         }));
-        UseChemicalBalancer { data, notify: cx.schedule_update() }
+        UseChemicalBalancer { data }
     })
 }
 
@@ -32,6 +34,7 @@ impl UseChemicalBalancer {
         match ChemicalBalancer::from_str(&data.string) {
             Ok(o) => {
                 data.balancer = o;
+                data.error.clear();
             }
             Err(e) => {
                 data.error = e.to_string();
@@ -40,17 +43,31 @@ impl UseChemicalBalancer {
     }
     pub fn as_mathml(&self) -> LazyNodes {
         let data = self.data.borrow();
+        if !data.error.is_empty() {
+            let message = data.error.clone();
+            return rsx! {
+                div {
+                    span {
+                        style: "color: red;",
+                        message
+                    }
+                }
+            };
+        }
         let solved = cast_isize_to_f64(data.balancer.solve_integers());
-        let mathml = data.balancer.render_mathml(&solved).to_string();
+        let mathml = data.balancer.render_mathml(&solved);
+        let raw = display_mathml(mathml).to_string();
         rsx! {
             div {
-                dangerous_inner_html: "{mathml}"
+                dangerous_inner_html: "{raw}"
             }
         }
     }
-
     pub fn as_mathematica(&self) -> LazyNodes {
         let data = self.data.borrow();
+        if !data.error.is_empty() {
+            return rsx! { div {} };
+        }
         let text = data.balancer.solve_by_mathematica();
         rsx! {
             div {

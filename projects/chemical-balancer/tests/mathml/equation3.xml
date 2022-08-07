@@ -1,0 +1,113 @@
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+	<mrow>
+		<mn>10</mn>
+		<mrow>
+			<msub>
+				<mi mathvariant="normal">K</mi>
+				<mn>4</mn>
+			</msub>
+			<mi mathvariant="normal">Fe</mi>
+			<mrow>
+				<mo stretchy="true" form="prefix">(</mo>
+				<mrow>
+					<mi mathvariant="normal">C</mi>
+					<mi mathvariant="normal">N</mi>
+				</mrow>
+				<mo stretchy="true" form="postfix">)</mo>
+			</mrow>
+		</mrow>
+		<mo>+</mo>
+		<mn>122</mn>
+		<mrow>
+			<mi mathvariant="normal">K</mi>
+			<mi mathvariant="normal">Mn</mi>
+			<msub>
+				<mi mathvariant="normal">O</mi>
+				<mn>4</mn>
+			</msub>
+		</mrow>
+		<mo>+</mo>
+		<mn>188</mn>
+		<mrow>
+			<msub>
+				<mi mathvariant="normal">H</mi>
+				<mn>2</mn>
+			</msub>
+			<mi mathvariant="normal">S</mi>
+			<msub>
+				<mi mathvariant="normal">O</mi>
+				<mn>4</mn>
+			</msub>
+		</mrow>
+		<mo>=</mo>
+		<mn>60</mn>
+		<mrow>
+			<mi mathvariant="normal">C</mi>
+			<msub>
+				<mi mathvariant="normal">O</mi>
+				<mn>2</mn>
+			</msub>
+		</mrow>
+		<mo>+</mo>
+		<mn>60</mn>
+		<mrow>
+			<mi mathvariant="normal">K</mi>
+			<mi mathvariant="normal">N</mi>
+			<msub>
+				<mi mathvariant="normal">O</mi>
+				<mn>3</mn>
+			</msub>
+		</mrow>
+		<mo>+</mo>
+		<mn>188</mn>
+		<mrow>
+			<msub>
+				<mi mathvariant="normal">H</mi>
+				<mn>2</mn>
+			</msub>
+			<mi mathvariant="normal">O</mi>
+		</mrow>
+		<mo>+</mo>
+		<mn>51</mn>
+		<mrow>
+			<msub>
+				<mi mathvariant="normal">K</mi>
+				<mn>2</mn>
+			</msub>
+			<mi mathvariant="normal">S</mi>
+			<msub>
+				<mi mathvariant="normal">O</mi>
+				<mn>4</mn>
+			</msub>
+		</mrow>
+		<mo>+</mo>
+		<mn>122</mn>
+		<mrow>
+			<mi mathvariant="normal">Mn</mi>
+			<mi mathvariant="normal">S</mi>
+			<msub>
+				<mi mathvariant="normal">O</mi>
+				<mn>4</mn>
+			</msub>
+		</mrow>
+		<mo>+</mo>
+		<mn>5</mn>
+		<mrow>
+			<msub>
+				<mi mathvariant="normal">Fe</mi>
+				<mn>2</mn>
+			</msub>
+			<mrow>
+				<mo stretchy="true" form="prefix">(</mo>
+				<mrow>
+					<mi mathvariant="normal">S</mi>
+					<msub>
+						<mi mathvariant="normal">O</mi>
+						<mn>4</mn>
+					</msub>
+				</mrow>
+				<mo stretchy="true" form="postfix">)</mo>
+			</mrow>
+		</mrow>
+	</mrow>
+</math>

@@ -15,7 +15,7 @@ num = "0.4.0"
 tracing = "0.1.37"
 latexify = "0.0.1"
 rationalize = "0.2.0"
-mathml-core = "0.1.4"
+mathml-core = "0.1.5"
 
 #[dependencies.rationalize]
 #version = "0.2.0"
