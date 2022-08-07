@@ -1,4 +1,5 @@
 mod chem_atom;
+pub mod helpers;
 mod parser;
 mod term;
 

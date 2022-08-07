@@ -4,29 +4,29 @@ use dioxus::html::textarea;
 // import the prelude to get access to the `rsx!` macro and the `Scope` and `Element` types
 use crate::hooks::use_chemical_balancer;
 use dioxus::prelude::*;
-use dioxus_use_storage::use_local_storage;
 
 mod hooks;
 
 // create a component that renders a div with the text "Hello, world!"
-pub fn App(cx: Scope) -> Element {
+pub fn Editor(cx: Scope) -> Element {
+    const PLACE_HOLDER: &str = "C6H5COOH + O2 = CO2 + H2O";
+    let text = use_state(&cx, || PLACE_HOLDER.to_string());
     let chem = use_chemical_balancer(&cx);
+    chem.update(&text);
     cx.render(rsx! {
         div {
             h2 { "Chemical Balancer" }
             input {
-                oninput: move |evt| chem.on_input(evt),
+                placeholder: "Type here",
+                value: "{text}",
+                oninput: move |e| text.set(e.value.to_owned()),
             }
-            h2 { "Chemical 2"}
-            textarea {
-
-            }
+            h2 { "Balanced Equation" }
+            chem.as_mathml()
             h2 {
-                "Balanced 3"
+                "High-Precision Checking"
             }
-            textarea {
-
-            }
+            chem.as_mathematica()
         }
     })
 }

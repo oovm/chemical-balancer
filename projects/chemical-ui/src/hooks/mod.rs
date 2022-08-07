@@ -1,12 +1,11 @@
-use chemical_balancer::ChemicalBalancer;
-use dioxus::{
-    core::{Event, ScopeState},
-    events::FormData,
-};
-use std::{cell::RefCell, rc::Rc, str::FromStr};
+use chemical_balancer::{helpers::cast_isize_to_f64, ChemicalBalancer};
+use dioxus::prelude::*;
+use std::{cell::RefCell, rc::Rc, str::FromStr, sync::Arc};
 
+#[derive(Clone)]
 pub struct UseChemicalBalancer {
     data: Rc<RefCell<BalancerData>>,
+    notify: Arc<dyn Fn() + Send + Sync + 'static>,
 }
 
 pub fn use_chemical_balancer(cx: &ScopeState) -> &mut UseChemicalBalancer {
@@ -16,7 +15,7 @@ pub fn use_chemical_balancer(cx: &ScopeState) -> &mut UseChemicalBalancer {
             balancer: ChemicalBalancer::default(),
             error: "".to_string(),
         }));
-        UseChemicalBalancer { data }
+        UseChemicalBalancer { data, notify: cx.schedule_update() }
     })
 }
 
@@ -27,10 +26,6 @@ struct BalancerData {
 }
 
 impl UseChemicalBalancer {
-    pub fn on_input(&self, data: Event<FormData>) {
-        self.update(&data.value);
-    }
-
     pub fn update(&self, text: &str) {
         let mut data = self.data.borrow_mut();
         data.string = text.to_string();
@@ -40,6 +35,28 @@ impl UseChemicalBalancer {
             }
             Err(e) => {
                 data.error = e.to_string();
+            }
+        }
+    }
+    pub fn as_mathml(&self) -> LazyNodes {
+        let data = self.data.borrow();
+        let solved = cast_isize_to_f64(data.balancer.solve_integers());
+        let mathml = data.balancer.render_mathml(&solved).to_string();
+        rsx! {
+            div {
+                dangerous_inner_html: "{mathml}"
+            }
+        }
+    }
+
+    pub fn as_mathematica(&self) -> LazyNodes {
+        let data = self.data.borrow();
+        let text = data.balancer.solve_by_mathematica();
+        rsx! {
+            div {
+                pre {
+                    text
+                }
             }
         }
     }
