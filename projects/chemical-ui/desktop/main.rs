@@ -1,8 +1,18 @@
 #![allow(non_snake_case)]
+
+use dioxus_desktop::{
+    tao::{platform::windows::WindowBuilderExtWindows, window::Icon},
+    Config, WindowBuilder,
+};
 // import the prelude to get access to the `rsx!` macro and the `Scope` and `Element` types
 use chemical_ui::Editor;
 
 fn main() {
-    // launch the web app
-    dioxus_desktop::launch(Editor);
+    let icon = Icon::from_rgba(include_bytes!("default_icon.bin").to_vec(), 192, 192).unwrap();
+    let win = WindowBuilder::new()
+        .with_taskbar_icon(Some(icon.clone()))
+        .with_window_icon(Some(icon.clone()))
+        .with_title("Chemical Balancer");
+    let cfg = Config::new().with_window(win);
+    dioxus_desktop::launch_cfg(Editor, cfg);
 }

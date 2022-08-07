@@ -62,22 +62,15 @@ impl Display for ChemicalTerm {
 impl From<ChemicalTerm> for MathML {
     fn from(value: ChemicalTerm) -> Self {
         let terms = value.compound.into_iter().map(|term| term.into());
-        match &value.kind {
-            ChemicalKind::Atomic(atom) => {
-                let base = MathIdentifier::normal(atom);
-                if value.count == 1.0 {
-                    base.into()
-                }
-                else {
-                    MathMultiScript::sub_script(base.into(), value.count.into()).into()
-                }
-            }
+        let base: MathML = match &value.kind {
+            ChemicalKind::Atomic(atom) => MathIdentifier::normal(atom).into(),
             ChemicalKind::Compound => MathRow::new(terms).into(),
             ChemicalKind::Paired(lhs, rhs) => MathFenced::new(terms, *lhs, *rhs).into(),
             ChemicalKind::Attached(_) => {
                 todo!()
             }
-        }
+        };
+        if value.count == 1.0 { base } else { MathMultiScript::sub_script(base.into(), value.count.into()).into() }
     }
 }
 

@@ -7,14 +7,17 @@
 				<mn>4</mn>
 			</msub>
 			<mi mathvariant="normal">Fe</mi>
-			<mrow>
-				<mo stretchy="true" form="prefix">(</mo>
+			<msub>
 				<mrow>
-					<mi mathvariant="normal">C</mi>
-					<mi mathvariant="normal">N</mi>
+					<mo stretchy="true" form="prefix">(</mo>
+					<mrow>
+						<mi mathvariant="normal">C</mi>
+						<mi mathvariant="normal">N</mi>
+					</mrow>
+					<mo stretchy="true" form="postfix">)</mo>
 				</mrow>
-				<mo stretchy="true" form="postfix">)</mo>
-			</mrow>
+				<mn>6</mn>
+			</msub>
 		</mrow>
 		<mo>+</mo>
 		<mn>122</mn>
@@ -97,17 +100,20 @@
 				<mi mathvariant="normal">Fe</mi>
 				<mn>2</mn>
 			</msub>
-			<mrow>
-				<mo stretchy="true" form="prefix">(</mo>
+			<msub>
 				<mrow>
-					<mi mathvariant="normal">S</mi>
-					<msub>
-						<mi mathvariant="normal">O</mi>
-						<mn>4</mn>
-					</msub>
+					<mo stretchy="true" form="prefix">(</mo>
+					<mrow>
+						<mi mathvariant="normal">S</mi>
+						<msub>
+							<mi mathvariant="normal">O</mi>
+							<mn>4</mn>
+						</msub>
+					</mrow>
+					<mo stretchy="true" form="postfix">)</mo>
 				</mrow>
-				<mo stretchy="true" form="postfix">)</mo>
-			</mrow>
+				<mn>3</mn>
+			</msub>
 		</mrow>
 	</mrow>
 </math>
