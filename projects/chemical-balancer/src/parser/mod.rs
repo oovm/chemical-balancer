@@ -48,10 +48,11 @@ impl ChemicalBalancer {
         let (state, eq) = state
             .skip(whitespace)
             .begin_choice()
-            .or_else(|s| s.match_str("="))
-            .or_else(|s| s.match_str("=="))
             .or_else(|s| s.match_str("=>"))
+            .or_else(|s| s.match_str("=="))
+            .or_else(|s| s.match_str("="))
             .or_else(|s| s.match_str("->"))
+            .or_else(|s| s.match_str("→"))
             .end_choice()?;
         state.finish(eq.to_string())
     }
