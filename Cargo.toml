@@ -1,6 +1,7 @@
 [workspace]
 members = ["projects/*"]
 default-members = [
+    "projects/chemical-ui",
     "projects/chemical-balancer",
 ]
 exclude = [

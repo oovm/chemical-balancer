@@ -19,9 +19,9 @@ name = "chemical-balancer"
 path = "desktop/main.rs"
 
 [dependencies]
-dioxus = "0.3.2"
-dioxus-desktop = "0.3.0"
-dioxus-web = "0.3.1"
+dioxus = "0.6.3"
+dioxus-desktop = "0.6.3"
+dioxus-web = "0.6.3"
 dioxus-hooks-plus = "0.2.1"
 
 [dependencies.chemical-balancer]
@@ -29,7 +29,7 @@ version = "*"
 path = "../chemical-balancer"
 
 [dev-dependencies]
-image = "0.24.6"
+image = "0.25.5"
 
 [features]
 default = []
