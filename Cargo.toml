@@ -1,11 +1,13 @@
 [workspace]
+resolver = "3"
 members = ["projects/*"]
 default-members = [
-    "projects/chemical-ui",
-    "projects/chemical-balancer",
+    "projects/balancer-rs",
 ]
 exclude = [
     "projects/.DS_Store",
+    "projects/balancer-ts",
+    "projects/balancer-h5",
 ]
 
 [profile.release]
