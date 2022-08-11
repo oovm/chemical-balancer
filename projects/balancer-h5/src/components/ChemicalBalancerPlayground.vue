@@ -7,16 +7,16 @@
       </h2>
       
       <div class="space-y-4">
-        <!-- 反应物输入 -->
+        <!-- 化学方程式输入 -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">
-            反应物 (用 + 分隔)
+            化学方程式 (用 == 或 = 分隔反应物和生成物)
           </label>
           <input
-            v-model="reactants"
+            v-model="equation"
             type="text"
             class="input-field w-full"
-            placeholder="例如: CH4 + O2 或 [MnO4]- + [H]+ + [Cl]-"
+            placeholder="例如: CH4 + O2 == CO2 + H2O 或 [MnO4]- + [H]+ + [Cl]- == [Mn]2+ + H2O + Cl2"
             @keyup.enter="balanceEquation"
           />
         </div>
@@ -32,8 +32,6 @@
             <span>交换</span>
           </button>
           
-          <div class="text-2xl text-gray-400">→</div>
-          
           <button
             @click="balanceEquation"
             class="btn-primary flex items-center space-x-2"
@@ -42,39 +40,42 @@
             <i class="i-carbon-chemistry text-lg"></i>
             <span>{{ isBalancing ? '配平中...' : '配平' }}</span>
           </button>
-        </div>
-
-        <!-- 生成物输入 -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">
-            生成物 (用 + 分隔)
-          </label>
-          <input
-            v-model="products"
-            type="text"
-            class="input-field w-full"
-            placeholder="例如: CO2 + H2O 或 [Mn]2+ + H2O + Cl2"
-            @keyup.enter="balanceEquation"
-          />
+          
+          <button
+            @click="showExamples = true"
+            class="btn-secondary flex items-center space-x-2"
+          >
+            <i class="i-carbon-list text-lg"></i>
+            <span>示例</span>
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- 示例方程式 -->
-    <div class="card">
-      <h3 class="text-lg font-medium text-gray-800 mb-3">
-        示例方程式
-      </h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <button
-          v-for="example in examples"
-          :key="example.name"
-          @click="loadExample(example)"
-          class="text-left p-3 rounded-lg border border-gray-200 hover:border-primary-300 hover:bg-primary-50 transition-colors"
-        >
-          <div class="font-medium text-gray-800">{{ example.name }}</div>
-          <div class="text-sm text-gray-600 mt-1">{{ example.equation }}</div>
-        </button>
+    <!-- 示例方程式弹窗 -->
+    <div v-if="showExamples" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click="showExamples = false">
+      <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-96 overflow-y-auto" @click.stop>
+        <div class="p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-medium text-gray-800">
+              示例方程式
+            </h3>
+            <button @click="showExamples = false" class="text-gray-400 hover:text-gray-600">
+              <i class="i-carbon-close text-xl"></i>
+            </button>
+          </div>
+          <div class="grid grid-cols-1 gap-3">
+            <button
+              v-for="example in examples"
+              :key="example.name"
+              @click="loadExample(example)"
+              class="text-left p-3 rounded-lg border border-gray-200 hover:border-primary-300 hover:bg-primary-50 transition-colors"
+            >
+              <div class="font-medium text-gray-800">{{ example.name }}</div>
+              <div class="text-sm text-gray-600 mt-1">{{ example.equation }}</div>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -137,76 +138,69 @@
 
 <script setup lang="ts">
 import { ref, nextTick, onMounted } from 'vue'
-import { ChemicalEquationBalancer } from 'chemical-balancer-ts'
+import { ChemicalEquationBalancer } from 'balancer-ts'
 import katex from 'katex'
 
+const equation = ref('')
+const isBalancing = ref(false)
+const result = ref<any>(null)
+const error = ref('')
+const latexResult = ref('')
+const textResult = ref('')
+const htmlResult = ref('')
+const showExamples = ref(false)
+const latexContainer = ref<HTMLElement>()
+
+// 创建化学方程式配平器实例
+const balancer = new ChemicalEquationBalancer()
+
+// 响应式数据
 interface Example {
   name: string
   equation: string
-  reactants: string
-  products: string
 }
-
-const reactants = ref('')
-const products = ref('')
-const isBalancing = ref(false)
-const result = ref<any>(null)
-const latexContainer = ref<HTMLElement>()
-
-const balancer = new ChemicalEquationBalancer()
 
 const examples: Example[] = [
   {
     name: '甲烷燃烧',
-    equation: 'CH4 + O2 → CO2 + H2O',
-    reactants: 'CH4 + O2',
-    products: 'CO2 + H2O'
+    equation: 'CH4 + O2 == CO2 + H2O'
+  },
+  {
+    name: '氢气燃烧',
+    equation: 'H2 + O2 == H2O'
+  },
+  {
+    name: '氨气合成',
+    equation: 'N2 + H2 == NH3'
   },
   {
     name: '高锰酸钾氧化',
-    equation: 'KMnO4 + HCl → KCl + MnCl2 + H2O + Cl2',
-    reactants: 'KMnO4 + HCl',
-    products: 'KCl + MnCl2 + H2O + Cl2'
+    equation: '[MnO4]- + [H]+ + [Cl]- == [Mn]2+ + H2O + Cl2'
   },
   {
-    name: '离子反应',
-    equation: '[MnO4]- + [H]+ + [Cl]- → [Mn]2+ + H2O + Cl2',
-    reactants: '[MnO4]- + [H]+ + [Cl]-',
-    products: '[Mn]2+ + H2O + Cl2'
+    name: '铝热反应',
+    equation: 'Al + Fe2O3 == Al2O3 + Fe'
   },
   {
-    name: '虚拟元素',
-    equation: 'PhCH3 + O2 → CO2 + H2O',
-    reactants: 'PhCH3 + O2',
-    products: 'CO2 + H2O'
-  },
-  {
-    name: '复杂化合物',
-    equation: 'Al2(SO4)3 + Ca(OH)2 → Al(OH)3 + CaSO4',
-    reactants: 'Al2(SO4)3 + Ca(OH)2',
-    products: 'Al(OH)3 + CaSO4'
-  },
-  {
-    name: '葡萄糖燃烧',
-    equation: 'C6H12O6 + O2 → CO2 + H2O',
-    reactants: 'C6H12O6 + O2',
-    products: 'CO2 + H2O'
+    name: '碳酸钙分解',
+    equation: 'CaCO3 == CaO + CO2'
   }
 ]
 
 const loadExample = (example: Example) => {
-  reactants.value = example.reactants
-  products.value = example.products
+  equation.value = example.equation
+  showExamples.value = false
 }
 
 const swapReactantsProducts = () => {
-  const temp = reactants.value
-  reactants.value = products.value
-  products.value = temp
+  const parts = equation.value.split(/==|=/)
+  if (parts.length === 2) {
+    equation.value = `${parts[1].trim()} == ${parts[0].trim()}`
+  }
 }
 
 const balanceEquation = async () => {
-  if (!reactants.value.trim() || !products.value.trim()) {
+  if (!equation.value.trim()) {
     return
   }
   
@@ -214,8 +208,7 @@ const balanceEquation = async () => {
   result.value = null
   
   try {
-    const equation = `${reactants.value.trim()} = ${products.value.trim()}`
-    const balanceResult = balancer.balance(equation)
+    const balanceResult = balancer.balance(equation.value.trim())
     result.value = balanceResult
     
     // 渲染 LaTeX

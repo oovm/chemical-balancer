@@ -1,5 +1,5 @@
 {
-  "name": "chemical-balancer-h5",
+  "name": "balancer-h5",
   "version": "1.0.0",
   "description": "Chemical equation balancer playground with Vue 3",
   "type": "module",
@@ -12,7 +12,7 @@
   "dependencies": {
     "vue": "^3.4.0",
     "katex": "^0.16.0",
-    "chemical-balancer-ts": "file:../balancer-ts"
+    "balancer-ts": "workspace:*"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.0",

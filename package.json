@@ -1,12 +1,22 @@
 {
+    "name": "chemical-balancer",
     "private": true,
+    "workspaces": [
+        "projects/*"
+    ],
     "scripts": {
         "build": "cargo build --release",
         "test": "cargo test --release",
         "fmt": "cargo fmt --all",
         "p": "git push && git push --tags --prune",
         "reset": "git reset Head~ --soft",
-        "u": "cargo upgrade --workspace"
+        "u": "cargo upgrade --workspace",
+        "dev:h5": "pnpm --filter balancer-h5 dev",
+        "build:ts": "pnpm --filter balancer-ts build",
+        "test:ts": "pnpm --filter balancer-ts test"
     },
-    "packageManager": "pnpm@10.11.0"
+    "packageManager": "pnpm@10.11.0",
+    "devDependencies": {
+        "typescript": "^5.3.0"
+    }
 }
