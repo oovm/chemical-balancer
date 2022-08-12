@@ -93,8 +93,8 @@ export class ChemicalParser {
     let symbol = this.input[this.position];
     this.position++;
 
-    // 读取小写字母
-    while (this.position < this.input.length && /[a-z]/.test(this.input[this.position])) {
+    // 读取小写字母或第二个大写字母（用于虚拟元素如Ph, Et）
+    while (this.position < this.input.length && (/[a-z]/.test(this.input[this.position]) || (/[A-Z]/.test(this.input[this.position]) && symbol.length === 1))) {
       symbol += this.input[this.position];
       this.position++;
     }
@@ -147,14 +147,32 @@ export class ChemicalParser {
       return 0;
     }
 
-    const sign = this.peek();
-    if (sign !== '+' && sign !== '-') {
-      return 0;
+    let sign = 1;
+    let chargeStr = '';
+
+    if (this.peek() === '+') {
+      sign = 1;
+      this.position++;
+    } else if (this.peek() === '-') {
+      sign = -1;
+      this.position++;
     }
 
-    this.position++;
-    const chargeNum = this.parseNumber();
-    return sign === '+' ? chargeNum : -chargeNum;
+    // 确保后面有数字，如果没有，则默认为1
+    if (this.position < this.input.length && /\d/.test(this.input[this.position])) {
+      while (this.position < this.input.length && /\d/.test(this.input[this.position])) {
+        chargeStr += this.input[this.position];
+        this.position++;
+      }
+    } else {
+      // 如果没有数字，但有符号，则电荷为1
+      if (sign !== 1) { // 检查是否有明确的符号
+        chargeStr = '1';
+      }
+    }
+
+    const chargeNum = chargeStr ? parseInt(chargeStr) : 0; // 如果没有符号也没有数字，则电荷为0
+    return sign * chargeNum;
   }
 
   /**
