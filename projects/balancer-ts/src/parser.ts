@@ -89,16 +89,17 @@ export class ChemicalParser {
         if (this.position >= this.input.length || !/[A-Z]/.test(this.input[this.position])) {
             throw new Error(`Expected element symbol at position ${this.position}`);
         }
-
+        // First char is A-Z
         let symbol = this.input[this.position];
         this.position++;
 
-        // 读取小写字母或第二个大写字母（用于虚拟元素如Ph, Et）
-        while (this.position < this.input.length && (/[a-z]/.test(this.input[this.position]) || (/[A-Z]/.test(this.input[this.position]) && symbol.length === 1))) {
+        // Subsequent chars must be a-z for standard elements and common groups like Ph, Et
+        while (this.position < this.input.length && /[a-z]/.test(this.input[this.position])) {
             symbol += this.input[this.position];
             this.position++;
         }
 
+        // For most cases, [A-Z][a-z]* is sufficient.
         return symbol;
     }
 
@@ -141,38 +142,81 @@ export class ChemicalParser {
 
     /**
      * 解析电荷
+     * Handles formats like: +2, -2, 2+, 2-, +, -
      */
     private parseCharge(): number {
+        // Store initial position for backtracking
+        const initialPosition = this.position;
+
         if (this.position >= this.input.length) {
+            // No characters left to parse
             return 0;
         }
 
         let sign = 1;
         let chargeStr = '';
+        let signIsPrefix = false;
+        let signIsPostfix = false;
+        let digitsFound = false;
 
+        // 1. Check for a prefix sign (+ or -)
         if (this.peek() === '+') {
             sign = 1;
             this.position++;
+            signIsPrefix = true;
         } else if (this.peek() === '-') {
             sign = -1;
             this.position++;
+            signIsPrefix = true;
         }
 
-        // 确保后面有数字，如果没有，则默认为1
-        if (this.position < this.input.length && /\d/.test(this.input[this.position])) {
-            while (this.position < this.input.length && /\d/.test(this.input[this.position])) {
-                chargeStr += this.input[this.position];
+        // 2. Read digits for charge magnitude
+        const digitsStartPosition = this.position;
+        while (this.position < this.input.length && /\d/.test(this.input[this.position])) {
+            chargeStr += this.input[this.position];
+            this.position++;
+        }
+        digitsFound = chargeStr.length > 0;
+
+        // 3. If no prefix sign was found AND digits were found, check for a postfix sign
+        if (!signIsPrefix && digitsFound) {
+            if (this.peek() === '+') {
+                // sign remains 1 (or could be set explicitly: sign = 1;)
                 this.position++;
+                signIsPostfix = true;
+            } else if (this.peek() === '-') {
+                sign = -1; // Set sign to negative
+                this.position++;
+                signIsPostfix = true;
+            }
+        }
+
+        if (digitsFound) {
+            // Valid if:
+            // - [sign][digits] (e.g., +2, -2) -> signIsPrefix is true
+            // - [digits][sign] (e.g., 2-, 2+) -> signIsPostfix is true
+            // - [digits] alone is NOT a charge in this context, it would be a subscript.
+            //   So, if only digitsFound is true, but neither signIsPrefix nor signIsPostfix, it's not a charge.
+            if (signIsPrefix || signIsPostfix) {
+                return sign * parseInt(chargeStr);
+            } else {
+                // Only digits found, no sign. This is not a charge. Backtrack.
+                this.position = initialPosition;
+                return 0;
             }
         } else {
-            // 如果没有数字，但有符号，则电荷为1
-            if (sign !== 1) { // 检查是否有明确的符号
-                chargeStr = '1';
+            // No digits found
+            // Valid if:
+            // - [sign] (e.g., +, -) -> signIsPrefix is true
+            if (signIsPrefix) {
+                return sign * 1; // Charge is +/-1
+            } else {
+                // No digits and no prefix sign (e.g. empty string, or non-charge character)
+                // Backtrack, as nothing was consumed that forms a charge.
+                this.position = initialPosition;
+                return 0;
             }
         }
-
-        const chargeNum = chargeStr ? parseInt(chargeStr) : 0; // 如果没有符号也没有数字，则电荷为0
-        return sign * chargeNum;
     }
 
     /**
