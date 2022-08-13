@@ -2,12 +2,13 @@
 resolver = "3"
 members = ["projects/*"]
 default-members = [
-    "projects/balancer-rs",
+
 ]
 exclude = [
     "projects/.DS_Store",
     "projects/balancer-ts",
     "projects/balancer-h5",
+    "projects/balancer-rs",
 ]
 
 [profile.release]

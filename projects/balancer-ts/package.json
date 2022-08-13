@@ -2,27 +2,28 @@
     "name": "chemical-balancer",
     "version": "0.0.0",
     "description": "Chemical equation balancer in TypeScript",
-    "exports": {
-        ".": {
-            "import": "./dist/chemical-balancer.es.js",
-            "require": "./dist/chemical-balancer.umd.js",
-            "types": "./src/index.ts"
-        }
-    },
-    "scripts": {
-        "build": "vite build",
-        "dev": "vite",
-        "test": "vitest",
-        "p": "pnpm run build && pnpm publish"
-    },
     "keywords": [
         "chemistry",
         "equation",
         "balancer",
         "typescript"
     ],
-    "author": "",
-    "license": "MIT",
+    "author": "Aster <galaster@foxmail.com>",
+    "license": "MPL-2.0",
+    "exports": {
+        ".": {
+            "types": "./src/index.ts",
+            "require": "./dist/chemical-balancer.umd.js",
+            "import": "./dist/chemical-balancer.es.js"
+        }
+    },
+    "scripts": {
+        "build": "vite build",
+        "dev": "vite",
+        "test": "vitest",
+        "p": "pnpm run build && pnpm publish",
+        "prepublishOnly": "pnpm run build"
+    },
     "dependencies": {
         "fraction.js": "^4.3.0"
     },
