@@ -142,16 +142,14 @@ import {nextTick, onMounted, ref} from 'vue'
 import {ChemicalEquationBalancer} from 'chemical-balancer'
 import katex from 'katex'
 import {ChemicalExample, chemicalExamples} from "@/components/examples";
+import {useFluent} from "fluent-vue";
 
 const equation = ref('')
 const isBalancing = ref(false)
 const result = ref<any>(null)
-const error = ref('')
-const latexResult = ref('')
-const textResult = ref('')
-const htmlResult = ref('')
 const showExamples = ref(false)
 const latexContainer = ref<HTMLElement>()
+const { $t } = useFluent()
 
 // 创建化学方程式配平器实例
 const balancer = new ChemicalEquationBalancer()
