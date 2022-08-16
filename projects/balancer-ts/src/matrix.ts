@@ -103,7 +103,7 @@ export class MatrixUtils {
             }
 
             // 转换为整数解
-            const integerSolution = this.toIntegerSolution(solution.map(f => f.n / f.d));
+            const integerSolution = this.toIntegerSolution(solution);
             nullSpaceBasis.push(integerSolution);
         }
 
@@ -164,12 +164,24 @@ export class MatrixUtils {
     /**
      * 将分数解转换为整数解
      */
-    private static toIntegerSolution(fractionSolution: Fraction[]): number[] {
+    private static toIntegerSolution(fractionSolution: Fraction[]): bigint[] {
         // 找到所有分母的最小公倍数
         let lcm = new Fraction(1);
         for (const frac of fractionSolution) {
             if (!frac.equals(0)) {
-                lcm = this.lcmFraction(lcm, new Fraction(frac.d));
+                // Correct way to check if a Fraction is zero
+                const denominatorAsFraction = new Fraction(frac.d); // frac.d is an integer, this makes it frac.d / 1
+                if (denominatorAsFraction.equals(0)) {
+                    // This case should ideally not happen if frac is a valid fraction,
+                    // as denominators cannot be zero.
+                    // However, fraction.js represents 0 as 0/1, so frac.d would be 1.
+                    // This check is more for robustness if an invalid Fraction object somehow appears.
+                    // If frac itself is 0/1, then frac.d is 1. new Fraction(1) is fine.
+                    // The critical part is that frac.d is not zero.
+                    // A valid fraction f=n/d will always have d != 0 (usually d >= 1).
+                    throw new Error(`Invalid fraction encountered with denominator ${frac.d}`);
+                }
+                lcm = this.lcmFraction(lcm, denominatorAsFraction);
             }
         }
 

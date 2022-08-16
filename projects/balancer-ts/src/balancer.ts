@@ -172,67 +172,115 @@ export class ChemicalBalancer {
         return equations;
     }
 
-    /**
-     * 标准化系数（确保为正整数）
-     */
-    private normalizeCoefficients(solution: number[]): number[] {
-        // 将所有系数转换为分数，并找到最小的正数分数
-        let minPositiveFraction: Fraction | null = null;
-        const fractions = solution.map(x => new Fraction(x));
-
-        for (const frac of fractions) {
-            if (frac.s === 1) { // 检查是否为正数
-                if (minPositiveFraction === null || frac.compare(minPositiveFraction) < 0) {
-                    minPositiveFraction = frac;
-                }
+// Helper to safely convert BigInt to Number if it's within safe range
+// or keep as BigInt if operations will handle it.
+// For coefficients, we usually want Numbers if they fit.
+    private convertToNumberIfSafe(val: number | bigint): number {
+        if (typeof val === 'bigint') {
+            if (val > BigInt(Number.MAX_SAFE_INTEGER) || val < BigInt(Number.MIN_SAFE_INTEGER)) {
+                console.warn(`BigInt value ${val} is too large to be safely converted to Number and may lose precision.`);
+                // Decide on error handling or fallback if precision loss is critical
             }
+            return Number(val);
+        }
+        return val;
+    }
+
+// BigInt-aware absolute value
+    private absBigIntAware(val: number | bigint): number | bigint {
+        if (typeof val === 'bigint') {
+            return val < 0n ? -val : val;
+        }
+        return Math.abs(val);
+    }
+
+
+    private normalizeCoefficients(solution: (number | bigint)[]): number[] {
+        // Check for all-zero solution (including BigInt zero)
+        if (solution.every(x => x === 0 || x === 0n)) {
+            console.warn("NormalizeCoefficients received an all-zero solution vector.");
+            return solution.map(() => 1); // Or other appropriate handling
         }
 
-        if (minPositiveFraction === null) {
-            // 如果没有正数，则所有系数都设为1（或根据实际情况处理）
-            return solution.map(() => 1);
+        // Make all coefficients positive (BigInt aware)
+        // And convert to Number if they are BigInts from solution, assuming they fit
+        let processingSolutionNumbers: number[] = solution.map(x => {
+            let absVal = this.absBigIntAware(x);
+            return this.convertToNumberIfSafe(absVal);
+        });
+
+        // The rest of fraction logic assumes input numbers are standard numbers.
+        // If processingSolutionNumbers could still contain very large numbers that fraction.js
+        // would turn into BigInts internally, then .n might again be BigInt.
+        const fractions = processingSolutionNumbers.map(x => new Fraction(x));
+
+        const nonZeroFractions = fractions.filter(f => !f.equals(0));
+        if (nonZeroFractions.length === 0) {
+            return processingSolutionNumbers.map(() => 1); // All were zero
         }
 
-        // 归一化所有分数，使其最小正数为1
-        const normalizedFractions = fractions.map(frac => frac.div(minPositiveFraction!));
-
-        // 找到所有分母的最小公倍数，将所有分数转换为整数
         let lcmDenominator = new Fraction(1);
-        for (const frac of normalizedFractions) {
-            lcmDenominator = lcmDenominator.lcm(frac.d);
+        for (const frac of nonZeroFractions) {
+            // frac.d from fraction.js is a Number (denominator)
+            lcmDenominator = lcmDenominator.lcm(new Fraction(frac.d));
         }
 
-        const integerCoefficients = normalizedFractions.map(frac => frac.mul(lcmDenominator).n);
+        // frac.mul(lcmDenominator).n can be a Number or BigInt from fraction.js
+        const integerCoefficientsMixed: (number | bigint)[] = fractions.map(frac => {
+            const multiplied = frac.mul(lcmDenominator);
+            // multiplied.n is the numerator from fraction.js, could be BigInt
+            return multiplied.n;
+        });
 
-        // 确保所有系数都是正数，如果零空间解中有负数，则取绝对值
-        const finalCoefficients = integerCoefficients.map(x => Math.abs(x));
+        // Convert all to Number for GCD and final output, ensuring they are positive
+        const integerCoefficients: number[] = integerCoefficientsMixed.map(val => {
+            return this.convertToNumberIfSafe(this.absBigIntAware(val));
+        });
 
-        // 再次计算最大公约数，进行简化
-        const commonDivisor = this.findGCD(finalCoefficients);
-        if (commonDivisor > 0) {
-            return finalCoefficients.map(x => x / commonDivisor);
+        const nonZeroIntegerCoefficients = integerCoefficients.filter(x => x !== 0);
+        if (nonZeroIntegerCoefficients.length === 0) {
+            return integerCoefficients.map(() => 1);
+        }
+
+        // findGCD now expects and works with Numbers
+        const commonDivisor = this.findGCD(nonZeroIntegerCoefficients);
+
+        if (commonDivisor > 0 && commonDivisor !== Infinity) { // commonDivisor should be a finite number
+            return integerCoefficients.map(x => x / commonDivisor);
         } else {
-            return finalCoefficients; // 避免除以零
+            return integerCoefficients; // Fallback if GCD is invalid
         }
     }
 
-    /**
-     * 计算最大公约数
-     */
+
+// findGCD and gcd should now primarily deal with Numbers
+// Ensure inputs to these are Numbers after BigInts have been converted.
     private findGCD(numbers: number[]): number {
         if (numbers.length === 0) return 1;
 
-        let result = Math.abs(Math.round(numbers[0]));
-        for (let i = 1; i < numbers.length; i++) {
-            result = this.gcd(result, Math.abs(Math.round(numbers[i])));
+        // Ensure numbers are positive integers. Math.round is for safety if inputs aren't perfectly integer.
+        const positiveNumbers = numbers.map(x => Math.abs(Math.round(x))).filter(x => x !== 0);
+        if (positiveNumbers.length === 0) return 1;
+
+        let result = positiveNumbers[0];
+        for (let i = 1; i < positiveNumbers.length; i++) {
+            result = this.gcd(result, positiveNumbers[i]);
         }
         return result;
     }
 
-    /**
-     * 计算两个数的最大公约数
-     */
     private gcd(a: number, b: number): number {
+        // Ensure inputs are positive integers
+        a = Math.abs(Math.round(a));
+        b = Math.abs(Math.round(b));
+
+        if (a === 0) return b;
+        if (b === 0) return a;
+        if (isNaN(a) || isNaN(b) || !isFinite(a) || !isFinite(b)) { // Robustness
+            console.warn(`Invalid input to gcd: a=${a}, b=${b}`);
+            return 1; // Or throw error
+        }
+
         while (b !== 0) {
             const temp = b;
             b = a % b;

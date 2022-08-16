@@ -1,6 +1,6 @@
 {
     "name": "chemical-balancer",
-    "version": "0.0.0",
+    "version": "0.1.0",
     "description": "Chemical equation balancer in TypeScript",
     "keywords": [
         "chemistry",
@@ -25,7 +25,7 @@
         "prepublishOnly": "pnpm run build"
     },
     "dependencies": {
-        "fraction.js": "^4.3.0"
+        "fraction.js": "^5.2.2"
     },
     "devDependencies": {
         "vite": "^6.3.5",
