@@ -3,20 +3,20 @@
     <!-- 输入区域 -->
     <div class="card">
       <h2 class="text-xl font-semibold text-gray-800 mb-4">
-        输入化学方程式
+        {{ $t('chemical-balancer-playground-title') }}
       </h2>
 
       <div class="space-y-4">
         <!-- 化学方程式输入 -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">
-            化学方程式 (用 == 或 = 分隔反应物和生成物)
+            {{ $t('chemical-equation-input-label') }}
           </label>
           <input
               v-model="equation"
               type="text"
               class="input-field w-full"
-              placeholder="例如: CH4 + O2 == CO2 + H2O 或 [MnO4]- + [H]+ + [Cl]- == [Mn]2+ + H2O + Cl2"
+              :placeholder="$t('chemical-equation-input-placeholder')"
               @keyup.enter="balanceEquation"
           />
         </div>
@@ -26,10 +26,10 @@
           <button
               @click="swapReactantsProducts"
               class="btn-secondary flex items-center space-x-2"
-              title="交换反应物和生成物"
+              :title="$t('swap-button')"
           >
             <i class="i-carbon-arrow-left-right text-lg"></i>
-            <span>交换</span>
+            <span>{{ $t('swap-button') }}</span>
           </button>
 
           <button
@@ -38,7 +38,7 @@
               :disabled="isBalancing"
           >
             <i class="i-carbon-chemistry text-lg"></i>
-            <span>{{ isBalancing ? '配平中...' : '配平' }}</span>
+            <span>{{ isBalancing ? $t('balancing-button') : $t('balance-button') }}</span>
           </button>
 
           <button
@@ -46,7 +46,7 @@
               class="btn-secondary flex items-center space-x-2"
           >
             <i class="i-carbon-list text-lg"></i>
-            <span>示例</span>
+            <span>{{ $t('examples-button') }}</span>
           </button>
         </div>
       </div>
@@ -59,7 +59,7 @@
         <div class="p-6">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-medium text-gray-800">
-              示例方程式
+              {{ $t('example-equations-title') }}
             </h3>
             <button @click="showExamples = false" class="text-gray-400 hover:text-gray-600">
               <i class="i-carbon-close text-xl"></i>
@@ -83,13 +83,13 @@
     <!-- 结果显示 -->
     <div v-if="result" class="card">
       <h3 class="text-lg font-medium text-gray-800 mb-4">
-        配平结果
+        {{ $t('balancing-results-title') }}
       </h3>
 
       <div v-if="result.success" class="space-y-4">
         <!-- LaTeX 渲染结果 -->
         <div class="bg-gray-50 rounded-lg p-4">
-          <div class="text-sm font-medium text-gray-700 mb-2">配平后的方程式:</div>
+          <div class="text-sm font-medium text-gray-700 mb-2">{{ $t('balanced-equation-label') }}</div>
           <div
               ref="latexContainer"
               class="text-center text-lg"
@@ -98,13 +98,13 @@
 
         <!-- 纯文本结果 -->
         <div class="bg-blue-50 rounded-lg p-4">
-          <div class="text-sm font-medium text-gray-700 mb-2">纯文本格式:</div>
+          <div class="text-sm font-medium text-gray-700 mb-2">{{ $t('plain-text-format-label') }}</div>
           <div class="font-mono text-gray-800">{{ result.text }}</div>
         </div>
 
         <!-- HTML 结果 -->
         <div class="bg-green-50 rounded-lg p-4">
-          <div class="text-sm font-medium text-gray-700 mb-2">HTML格式:</div>
+          <div class="text-sm font-medium text-gray-700 mb-2">{{ $t('html-format-label') }}</div>
           <div
               class="text-gray-800"
               v-html="result.html"
@@ -115,7 +115,7 @@
       <div v-else class="bg-red-50 border border-red-200 rounded-lg p-4">
         <div class="flex items-center space-x-2">
           <i class="i-carbon-warning text-red-500"></i>
-          <span class="font-medium text-red-800">配平失败</span>
+          <span class="font-medium text-red-800">{{ $t('balancing-failed-title') }}</span>
         </div>
         <div class="text-red-700 mt-2">{{ result.error }}</div>
       </div>
@@ -124,14 +124,14 @@
     <!-- 使用说明 -->
     <div class="card">
       <h3 class="text-lg font-medium text-gray-800 mb-3">
-        使用说明
+        {{ $t('usage-instructions-title') }}
       </h3>
       <div class="space-y-2 text-sm text-gray-600">
-        <p><strong>基本格式:</strong> 使用元素符号和数字，如 H2O、CH4</p>
-        <p><strong>离子:</strong> 使用方括号表示，如 [SO4]2-、[H]+</p>
-        <p><strong>虚拟元素:</strong> 支持如 Ph、Et 等有机基团</p>
-        <p><strong>括号:</strong> 使用圆括号表示基团，如 Ca(OH)2</p>
-        <p><strong>分隔符:</strong> 反应物和生成物用 + 分隔</p>
+        <p><strong>{{ $t('basic-format-instruction').split(':')[0] }}:</strong> {{ $t('basic-format-instruction').split(':')[1] }}</p>
+        <p><strong>{{ $t('ions-instruction').split(':')[0] }}:</strong> {{ $t('ions-instruction').split(':')[1] }}</p>
+        <p><strong>{{ $t('virtual-elements-instruction').split(':')[0] }}:</strong> {{ $t('virtual-elements-instruction').split(':')[1] }}</p>
+        <p><strong>{{ $t('parentheses-instruction').split(':')[0] }}:</strong> {{ $t('parentheses-instruction').split(':')[1] }}</p>
+        <p><strong>{{ $t('separators-instruction').split(':')[0] }}:</strong> {{ $t('separators-instruction').split(':')[1] }}</p>
       </div>
     </div>
   </div>
@@ -196,7 +196,7 @@ const balanceEquation = async () => {
   } catch (error) {
     result.value = {
       success: false,
-      error: error instanceof Error ? error.message : '未知错误'
+      error: error instanceof Error ? error.message : $t('unknown-error')
     }
   } finally {
     isBalancing.value = false
@@ -207,4 +207,31 @@ const balanceEquation = async () => {
 onMounted(() => {
   loadExample(chemicalExamples[0])
 })
+
+// 将 chemicalBalancer 实例暴露到 window 对象上
+const chemicalBalancer = new ChemicalEquationBalancer()
+
+// 暴露一个函数，用于在浏览器控制台或其他脚本中调用，获取 LaTeX 格式的配平结果
+window.balanceEquationsLatex = (equation: string) => {
+  try {
+    const result = chemicalBalancer.balance(equation)
+    if (result.success) {
+      return result.latex
+    } else {
+      return `Error: ${result.error}`
+    }
+  } catch (e: any) {
+    return `Error: ${e.message}`
+  }
+}
+
+// 暴露一个函数，用于在浏览器控制台或其他脚本中调用，获取 JSON 格式的配平结果
+window.balanceEquationsJson = (equation: string) => {
+  try {
+    const result = chemicalBalancer.balance(equation)
+    return JSON.stringify(result, null, 2)
+  } catch (e: any) {
+    return JSON.stringify({ success: false, error: e.message }, null, 2)
+  }
+}
 </script>

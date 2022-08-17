@@ -14,7 +14,7 @@
         ".": {
             "types": "./src/index.ts",
             "require": "./dist/chemical-balancer.umd.js",
-            "import": "./dist/chemical-balancer.es.js"
+            "import": "./src/index.ts"
         }
     },
     "scripts": {

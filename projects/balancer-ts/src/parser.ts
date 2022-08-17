@@ -11,7 +11,7 @@ export class ChemicalParser {
      * 解析化学方程式
      */
     parseEquation(equation: string): ChemicalEquation {
-        const parts = equation.split(/\s*[=→]\s*/);
+        const parts = equation.split(/\s*(?:=|==|->|→)\s*/);
         if (parts.length !== 2) {
             throw new Error('Invalid equation format');
         }
