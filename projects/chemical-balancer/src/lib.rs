@@ -6,6 +6,7 @@ use std::collections::BTreeSet;
 pub use errors::{Error, Result};
 
 
+#[derive(Debug)]
 pub struct ChemicalBalancer {
     elements: BTreeSet<String>,
     lhs: Vec<Compound>,

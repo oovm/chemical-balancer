@@ -2,13 +2,18 @@ use std::cmp::Ordering;
 use std::collections::BTreeSet;
 use std::fmt::{Debug, Formatter};
 use crate::{ChemicalBalancer, Compound, CompoundGroup};
-
+use std::convert::TryInto;
+mod solver;
 
 impl ChemicalBalancer {
+
     pub fn count_elements(&self, compound: &Compound) -> Vec<f64> {
         compound.count_elements(&self.elements)
     }
-    pub fn update_elements(&mut self) {
+    pub fn get_elements(&self) -> &BTreeSet<String> {
+        &self.elements
+    }
+    pub fn record_elements(&mut self) {
         for i in &self.lhs {
             i.record_elements(&mut self.elements);
         }
