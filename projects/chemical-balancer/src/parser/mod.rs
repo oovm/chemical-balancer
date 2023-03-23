@@ -3,56 +3,54 @@ use pex::{ParseResult, ParseState, StopBecause};
 use crate::Compound;
 
 impl FromStr for Compound {
-    type Err = ();
+    type Err = StopBecause;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        todo!()
-        // ParseState::new(s)
+        let state = ParseState::new(s.trim_end()).skip(parse_whitespace);
+        match Compound::parse(state) {
+            ParseResult::Pending(state, compound) if state.is_empty() => {
+                Ok(compound)
+            }
+            ParseResult::Pending(state, ..) => {
+                Err(StopBecause::ExpectEof { position: state.start_offset })
+            }
+            ParseResult::Stop(e) => {
+                Err(e)
+            }
+        }
     }
 }
 
 impl Compound {
     pub fn parse(state: ParseState) -> ParseResult<Self> {
-        let (state, compound) = state.match_repeats(|s|
+        let (state, compound) = state.match_repeat_m_n(1, 255, |s|
             {
-                let (state, _) = s.match_optional(parse_whitespace)?;
-                state.begin_choice()
-                    .maybe(Self::parse_parentheses_count)
+                s.skip(parse_whitespace).begin_choice()
                     .maybe(Self::parse_atom_count)
+                    .maybe(Self::parse_parentheses_count)
                     .end_choice()
-            }
+            },
         )?;
-        state.skip(parse_whitespace);
-        let (state, number) = state.match_optional(parse_decimal)?;
-        state.finish(Compound::Compound {
-            group: Default::default(),
-            compound,
-            count: number.unwrap_or(1.0),
-        })
+        let (state, number) = state.skip(parse_whitespace).match_optional(parse_decimal)?;
+        state.finish(Compound::compound(compound, number.unwrap_or(1.0)))
     }
 
 
     fn parse_parentheses_count(state: ParseState) -> ParseResult<Compound> {
         let (state, _) = state.match_char('(')?;
-        state.skip(parse_whitespace);
-        let (state, cs) = state.match_repeats(Self::parse)?;
-        state.skip(parse_whitespace);
-        let (state, _) = state.match_char(')')?;
-        state.skip(parse_whitespace);
-        let (state, number) = state.match_optional(parse_decimal)?;
+        let (state, cs) = state.skip(parse_whitespace).match_repeat_m_n(1, 255, Self::parse)?;
+        println!("Nested {:?}", cs);
+        let (state, _) = state.skip(parse_whitespace).match_char(')')?;
+        let (state, number) = state.skip(parse_whitespace).match_optional(parse_decimal)?;
         state.finish(Compound::parentheses(cs, number.unwrap_or(1.0)))
     }
 
 
     fn parse_atom_count(state: ParseState) -> ParseResult<Compound> {
         let (state, atom) = Self::parse_atom(state)?;
-        state.skip(parse_whitespace);
-        let (state, number) = state.match_optional(parse_decimal)?;
-        println!("{} {:?}", atom, number);
-        state.finish(Compound::Atom {
-            atom,
-            count: number.unwrap_or(1.0),
-        })
+        let (state, number) = state.skip(parse_whitespace).match_optional(parse_decimal)?;
+        // println!("{} {:?}", atom, number);
+        state.finish(Compound::atom(atom, number.unwrap_or(1.0)))
     }
 
     // uppercase letter + lowercase letters
@@ -132,9 +130,7 @@ fn parse_integer(state: ParseState) -> ParseResult<usize> {
         let integer = state.rest_text[..offset].parse().unwrap();
         state.advance(offset).finish(integer)
     }
-
 }
-
 
 
 #[test]
