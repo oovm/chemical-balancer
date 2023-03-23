@@ -1,11 +1,10 @@
 [package]
-name = "sub_projects"
-publish = false
+name = "chemical-balancer"
 version = "0.0.0"
 authors = ["Aster <192607617@qq.com>"]
-description = "..."
-repository = "https://github.com/oovm/sub_projects"
-documentation = "https://docs.rs/sub_projects"
+description = "Chemical equation balancer"
+repository = "https://github.com/oovm/chemical-balancer"
+documentation = "https://docs.rs/chemical-balancer"
 readme = "Readme.md"
 license = "MPL-2.0"
 edition = "2021"
