@@ -42,9 +42,9 @@ impl FromStr for Compound {
 
 impl ChemicalBalancer {
     pub fn parse(state: ParseState) -> ParseResult<Self> {
-        let (state, lhs) = state.match_repeat_m_n(1, 255, Compound::parse)?;
+        let (state, lhs) = ChemicalBalancer::parse_add(state)?;
         let (state, _) = state.skip(parse_whitespace).match_char('=')?;
-        let (state, rhs) = state.skip(parse_whitespace).match_repeat_m_n(1, 255, Compound::parse)?;
+        let (state, rhs) = ChemicalBalancer::parse_add(state.skip(parse_whitespace))?;
 
         let mut out = ChemicalBalancer {
             elements: Default::default(),
@@ -53,6 +53,16 @@ impl ChemicalBalancer {
         };
         out.record_elements();
 
+        state.finish(out)
+    }
+    fn parse_add(state: ParseState) -> ParseResult<Vec<Compound>> {
+        let (state, first) = Compound::parse(state)?;
+        let (state, rest) = state.match_repeats(|s| {
+            let (s, _) = s.skip(parse_whitespace).match_char('+')?;
+            Compound::parse(s.skip(parse_whitespace))
+        })?;
+        let mut out = vec![first];
+        out.extend(rest);
         state.finish(out)
     }
 }
@@ -171,6 +181,6 @@ fn parse_integer(state: ParseState) -> ParseResult<usize> {
 
 #[test]
 fn test() {
-    let co2 = ChemicalBalancer::from_str("S2(CO3) = CO2");
+    let co2 = ChemicalBalancer::from_str("Fe + Cl2 = FeCl3");
     println!("{:#?}", co2)
 }
