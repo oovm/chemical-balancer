@@ -24,7 +24,7 @@ impl Compound {
                     out
                 }
             }
-            Compound::Compound { compound, count } => {
+            Compound::Compound { compound, count, .. } => {
                 let mut out = vec![0.0; all.len()];
                 for c in compound {
                     let sub_out = c.count_elements(all);
@@ -38,4 +38,14 @@ impl Compound {
     }
 }
 
+impl Compound  {
+    pub fn parse(state: ParseState) -> ParseResult<Self> {
+        Compound::Compound {
+            group: Default::default(),
+            compound: vec![],
+            count: 0.0,
+        }
+    }
+
+}
 
