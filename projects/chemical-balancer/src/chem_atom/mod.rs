@@ -1,9 +1,12 @@
-use std::cmp::Ordering;
-use std::collections::BTreeSet;
-use std::fmt::{Debug, Formatter};
 use crate::{ChemicalBalancer, Compound, CompoundGroup};
+use std::{
+    cmp::Ordering,
+    collections::BTreeSet,
+    fmt::{Debug, Formatter},
+};
 mod solver;
-
+use num::{Integer, One};
+use rationalize::float2ratio;
 impl ChemicalBalancer {
     pub fn count_elements(&self, compound: &Compound) -> Vec<f64> {
         compound.count_elements(&self.elements)
@@ -21,22 +24,16 @@ impl ChemicalBalancer {
     }
 }
 
-
 // co2
 
 impl Debug for Compound {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Compound::Atom { atom, count, .. } => {
-                match count.partial_cmp(&1.0) {
-                    Some(Ordering::Equal) =>
-                        write!(f, "{}", atom)
+            Compound::Atom { atom, count, .. } => match count.partial_cmp(&1.0) {
+                Some(Ordering::Equal) => write!(f, "{}", atom),
 
-                    ,
-                    _ =>
-                        write!(f, "{}{}", atom, count)
-                }
-            }
+                _ => write!(f, "{}{}", atom, count),
+            },
             Compound::Compound { compound, count, .. } => {
                 let mut v = &mut f.debug_tuple("Compound");
                 for item in compound {
@@ -69,7 +66,8 @@ impl Compound {
                 if let Some(i) = all.iter().position(|x| x == atom) {
                     out[i] = *count;
                     out
-                } else {
+                }
+                else {
                     out
                 }
             }
@@ -89,28 +87,14 @@ impl Compound {
 
 impl Compound {
     pub fn atom(atom: String, count: f64) -> Self {
-        Compound::Atom {
-            atom,
-            count,
-            electronic: 0.0,
-        }
+        Compound::Atom { atom, count, electronic: 0.0 }
     }
 
     pub fn compound(compound: Vec<Compound>, count: f64) -> Self {
-        Compound::Compound {
-            group: CompoundGroup::None,
-            compound,
-            count,
-            electronic: 0.0,
-        }
+        Compound::Compound { group: CompoundGroup::None, compound, count, electronic: 0.0 }
     }
     pub fn parentheses(compound: Vec<Compound>, count: f64) -> Self {
-        Compound::Compound {
-            group: CompoundGroup::Parentheses,
-            compound,
-            count,
-            electronic: 0.0,
-        }
+        Compound::Compound { group: CompoundGroup::Parentheses, compound, count, electronic: 0.0 }
     }
     pub fn with_electronic(mut self, e: f64) -> Self {
         match &mut self {
@@ -124,4 +108,3 @@ impl Compound {
         self
     }
 }
-

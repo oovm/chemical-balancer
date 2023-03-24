@@ -1,5 +1,4 @@
 use super::*;
-use num::{integer::gcd, rational::Ratio, BigInt, Integer};
 
 impl ChemicalBalancer {
     pub fn matrix(&self) -> Vec<Vec<f64>> {
@@ -33,20 +32,19 @@ fn transpose(matrix: Vec<Vec<f64>>) -> Vec<Vec<f64>> {
 // Find the least common multiple that can be reduced to an integer
 // eg. [1.0, 1.5, 1.0] => [2,3,2]
 fn gcd_ints(input: &[f64]) -> Vec<isize> {
-    let ratios = input.iter().map(|&x| close_to_ratio(x)).collect::<Vec<_>>();
+    let ratios = input.iter().map(|&x| float2ratio::<6>(x, 1e-9)).collect::<Vec<_>>();
     println!("{:?}", ratios);
-    let denominators = ratios.iter().map(|x| x.denom().clone()).collect::<Vec<_>>();
-    let gcd = denominators.iter().fold(denominators[0].clone(), |acc, x| acc.gcd(x));
+    let mut denominators = vec![];
+    for i in &ratios {
+        if i.denom().is_one() {
+            continue;
+        }
+        denominators.push(i.denom());
+    }
+    println!("{:?}", denominators);
+    let gcd = denominators.iter().fold(denominators[0].clone(), |acc, x| acc.lcm(x));
     println!("{:?}", gcd);
     ratios.iter().map(|x| (x * gcd.clone()).to_integer()).collect::<Vec<_>>()
-}
-
-fn close_to_ratio(x: f64) -> Ratio<isize> {
-    let ratio_x = Ratio::from_float(x).unwrap();
-    let ratio_x = ratio_x.reduce();
-    let ratio_x = ratio_x.to_integer();
-    let ratio_x = Ratio::new(ratio_x, 1);
-    ratio_x
 }
 
 fn null_space(mut matrix: Vec<Vec<f64>>) -> Vec<Vec<f64>> {

@@ -1,4 +1,4 @@
-use num_rational::Ratio;
+use num::rational::Ratio;
 
 /// Expand a float to a continued fraction expansion
 ///
@@ -43,18 +43,22 @@ pub fn continued_fraction_expansion<const N: usize>(n: f64, min: f64) -> [usize;
 /// # Examples
 ///
 /// ```
-/// # use num_rational::Ratio;
-/// # use rationalize::float2ratio;
-/// let cfe = float2ratio::<10>(std::f64::consts::PI, 1e-10);
+/// use num::rational::Ratio;
+/// use rationalize::float2ratio;
+/// let cfe = float2ratio::<4>(std::f64::consts::PI, 1e-10);
 /// assert_eq!(cfe, Ratio::new(355, 113));
 /// ```
-pub fn float2ratio<const N: usize>(n: f64, min: f64) -> Ratio<usize> {
+pub fn float2ratio<const N: usize>(n: f64, min: f64) -> Ratio<isize> {
     let cfe = continued_fraction_expansion::<N>(n, min);
-    build_ratio(&cfe)
+    let (numer, denom) = build_ratio(&cfe).into();
+    match n.is_sign_negative() {
+        true => Ratio::new(-(numer as isize), denom as isize),
+        false => Ratio::new(numer as isize, denom as isize),
+    }
 }
 
 // build ratio from continued fraction expansion
-fn build_ratio(cfe: &[usize]) -> Ratio<usize> {
+pub fn build_ratio(cfe: &[usize]) -> Ratio<usize> {
     let seq = trim_tail_zeros(cfe);
     let mut out = Ratio::new(seq[seq.len() - 1], 1);
     for i in (0..seq.len() - 1).rev() {
@@ -63,7 +67,7 @@ fn build_ratio(cfe: &[usize]) -> Ratio<usize> {
     out
 }
 
-fn trim_tail_zeros(cfe: &[usize]) -> &[usize] {
+pub fn trim_tail_zeros(cfe: &[usize]) -> &[usize] {
     let mut i = cfe.len() - 1;
     while i > 0 && cfe[i] == 0 {
         i -= 1;

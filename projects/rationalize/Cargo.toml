@@ -4,13 +4,14 @@ version = "0.1.0"
 authors = ["Aster <192607617@qq.com>"]
 description = "rationalize float to ratio"
 repository = "https://github.com/oovm/chemical-balancer"
-documentation = "https://docs.rs/chemical-balancer"
+documentation = "https://docs.rs/rationalize"
 readme = "Readme.md"
 license = "MPL-2.0"
 edition = "2021"
 
 [dependencies]
-num-rational = "0.4.1"
+num = "0.4.0"
+
 
 [dev-dependencies]
 
